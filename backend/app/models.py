@@ -1,3 +1,4 @@
+
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -11,5 +12,11 @@ class WishList(BaseModel):
     id: int
     owner: str
     owner_id: str
+    items: List[WishItem]
+    shared_with: Optional[List[str]] = []
+
+class WishListCreate(BaseModel):
+    id: int
+    owner: str
     items: List[WishItem]
     shared_with: Optional[List[str]] = []

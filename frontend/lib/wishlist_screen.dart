@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'services.dart';
 import 'wishlist_details_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class WishListScreen extends StatefulWidget {
   const WishListScreen({super.key});
@@ -30,13 +31,33 @@ class _WishListScreenState extends State<WishListScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: \\${snapshot.error}'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'No wish lists found yet!\nCreate your first wish list to get started.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _createWishList,
+                    child: const Text('Create Wish List'),
+                  ),
+                ],
+              ),
+            );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('No wish lists found.'),
+                  const Text(
+                    'No wish lists found yet!\nCreate your first wish list to get started.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 18),
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _createWishList,
@@ -76,13 +97,23 @@ class _WishListScreenState extends State<WishListScreen> {
   }
 
   void _createWishList() async {
-    // For demo: create a wish list with a random id and default values
+    // Get the current user's display name from Firebase Auth
+    String? ownerName;
+    try {
+      // Import FirebaseAuth at the top if not already
+      // import 'package:firebase_auth/firebase_auth.dart';
+      final user = await FirebaseAuth.instance.currentUser;
+      ownerName = user?.displayName ?? user?.email ?? 'User';
+    } catch (_) {
+      ownerName = 'User';
+    }
     final newWishList = {
       'id': DateTime.now().millisecondsSinceEpoch,
-      'owner': 'User',
+      'owner': ownerName,
       'items': [
         {'id': 1, 'name': 'New Gift', 'reserved': false, 'reserved_by': null},
       ],
+      'shared_with': [],
     };
     try {
       await WishListService().createWishList(newWishList);

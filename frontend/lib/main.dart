@@ -3,13 +3,17 @@ import 'wishlist_screen.dart';
 import 'login_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'firebase_options.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load();
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform, // <-- use this
+    options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(const WishfulApp());
 }

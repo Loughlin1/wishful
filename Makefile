@@ -12,4 +12,4 @@ frontend:
 	cd frontend && flutter run
 
 frontend-web:
-	cd frontend && flutter run -d chrome
+	cd frontend && flutter run -d web-server --web-port=8080

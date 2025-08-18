@@ -2,8 +2,52 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 
-
 class WishListService {
+  static const String baseUrl = 'http://localhost:8000';
+
+  Future<List<String>> fetchTagOptions() async {
+    final headers = await _getAuthHeaders();
+    final response = await http.get(Uri.parse('$baseUrl/wishlist-tags'), headers: headers);
+    if (response.statusCode == 200) {
+      return List<String>.from(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load tag options');
+    }
+  }
+
+  Future<void> deleteWishList(int wishlistId) async {
+    final headers = await _getAuthHeaders();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/wishlists/$wishlistId'),
+      headers: headers,
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete wish list');
+    }
+  }
+
+  Future<void> editItemInWishList(int wishlistId, int itemId, String newName) async {
+    final headers = await _getAuthHeaders(json: true);
+    final response = await http.put(
+      Uri.parse('$baseUrl/wishlists/$wishlistId/items/$itemId'),
+      headers: headers,
+      body: jsonEncode({'name': newName}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to edit item');
+    }
+  }
+
+  Future<void> deleteItemFromWishList(int wishlistId, int itemId) async {
+    final headers = await _getAuthHeaders();
+    final response = await http.delete(
+      Uri.parse('$baseUrl/wishlists/$wishlistId/items/$itemId'),
+      headers: headers,
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete item');
+    }
+  }
   Future<void> updateWishList(int wishlistId, Map<String, dynamic> wishList) async {
     final headers = await _getAuthHeaders(json: true);
     final response = await http.put(
@@ -15,7 +59,6 @@ class WishListService {
       throw Exception('Failed to update wish list');
     }
   }
-  static const String baseUrl = 'http://localhost:8000';
 
   Future<Map<String, String>> _getAuthHeaders({bool json = false}) async {
     final user = FirebaseAuth.instance.currentUser;
@@ -55,7 +98,8 @@ class WishListService {
       headers: headers,
     );
     if (response.statusCode != 200) {
-      throw Exception('Failed to reserve gift');
+        final error = jsonDecode(response.body)['detail'];
+      throw Exception('Failed to reserve gift $error');
     }
   }
 

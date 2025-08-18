@@ -16,6 +16,77 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
   late String? currentUserId;
   late List<dynamic> sharedWith;
 
+  // --- Item edit/delete helpers (must be above build for trailing widget callbacks) ---
+  void _showEditItemDialog(Map<String, dynamic> item) {
+    final TextEditingController controller = TextEditingController(text: item['name'] ?? '');
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Item'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(hintText: 'Item name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final name = controller.text.trim();
+                if (name.isNotEmpty) {
+                  await _editItem(item['id'], name);
+                  if (mounted) Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _editItem(int itemId, String newName) async {
+    try {
+      await WishListService().editItemInWishList(widget.wishList['id'], itemId, newName);
+      setState(() {
+        items = items.map((item) {
+          if (item['id'] == itemId) {
+            item['name'] = newName;
+          }
+          return item;
+        }).toList();
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to edit item: $e')),
+        );
+      }
+    }
+  }
+
+  void _deleteItem(int itemId) async {
+    try {
+      await WishListService().deleteItemFromWishList(widget.wishList['id'], itemId);
+      setState(() {
+        items.removeWhere((item) => item['id'] == itemId);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete item: $e')),
+        );
+      }
+    }
+  }
+
+
+  // --- Item edit/delete helpers (must be above build for trailing widget callbacks) ---
+
   @override
   void initState() {
     super.initState();
@@ -24,7 +95,6 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
     sharedWith = widget.wishList['shared_with'] ?? [];
     currentUserId = null;
     _getCurrentUserId();
-
   }
 
   void _getCurrentUserId() async {
@@ -33,6 +103,8 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
       currentUserId = user?.uid;
     });
   }
+
+
 
   void _reserveGift(int itemId) async {
     try {
@@ -62,25 +134,49 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
     final isShared = currentUserId != null && sharedWith.contains(currentUserId);
     return Scaffold(
       appBar: AppBar(title: Text(widget.wishList['owner'] ?? 'Wish List')),
-      body: ListView.builder(
-        itemCount: items.length,
-        itemBuilder: (context, index) {
-          final item = items[index];
-          return ListTile(
-            title: Text(item['name'] ?? ''),
-            subtitle: item['reserved'] == true
-                ? Text('Reserved by \\${item['reserved_by'] ?? 'someone'}', style: const TextStyle(color: Colors.red))
-                : const Text('Available'),
-            trailing: item['reserved'] == true
-                ? const Icon(Icons.lock, color: Colors.red)
-                : (isShared || isOwner)
-                    ? ElevatedButton(
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return ListTile(
+                title: Text(item['name'] ?? ''),
+                subtitle: item['reserved'] == true
+                    ? Text('Reserved by \\${item['reserved_by'] ?? 'someone'}', style: const TextStyle(color: Colors.red))
+                    : const Text('Available'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isOwner) ...[
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        tooltip: 'Edit',
+                        onPressed: () => _showEditItemDialog(item),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        tooltip: 'Delete',
+                        onPressed: () => _deleteItem(item['id']),
+                      ),
+                    ]
+                    else if (item['reserved'] != true && (isShared || isOwner)) ...[
+                      ElevatedButton(
                         onPressed: () => _reserveGift(item['id']),
                         child: const Text('Reserve'),
-                      )
-                    : null,
-          );
-        },
+                      ),
+                    ]
+                    else if (item['reserved'] == true) ...[
+                      const Icon(Icons.lock, color: Colors.red),
+                    ]
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
       ),
       floatingActionButton: isOwner
           ? FloatingActionButton(

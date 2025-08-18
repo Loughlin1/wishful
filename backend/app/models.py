@@ -30,3 +30,11 @@ class WishListCreate(BaseModel):
     items: List[WishItem]
     shared_with: Optional[List[str]] = []
     tag: Optional[TagEnum] = None
+
+
+# User model for registration
+class User(BaseModel):
+    uid: str
+    first_name: str
+    last_name: str
+    email: str

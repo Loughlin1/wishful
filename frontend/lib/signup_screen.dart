@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http;
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -9,6 +10,8 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final TextEditingController firstNameController = TextEditingController();
+  final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
@@ -24,16 +27,62 @@ class _SignUpScreenState extends State<SignUpScreen> {
       });
       return;
     }
+    if (firstNameController.text.trim().isEmpty || lastNameController.text.trim().isEmpty) {
+      setState(() {
+        errorMessage = 'First and last name are required';
+        isLoading = false;
+      });
+      return;
+    }
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+      final user = userCredential.user;
+      if (user != null) {
+        // Send user info to backend
+        final token = await user.getIdToken();
+        final response = await registerUser(
+          uid: user.uid,
+          firstName: firstNameController.text.trim(),
+          lastName: lastNameController.text.trim(),
+          email: emailController.text.trim(),
+          token: token,
+        );
+        if (!response) {
+          setState(() { errorMessage = 'Failed to register user on server.'; });
+          return;
+        }
+      }
       if (mounted) Navigator.of(context).pop(); // Go back to login
     } on FirebaseAuthException catch (e) {
       setState(() { errorMessage = e.message; });
     } finally {
       setState(() { isLoading = false; });
+    }
+  }
+
+  Future<bool> registerUser({
+    required String uid,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String? token,
+  }) async {
+    if (token == null) return false;
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8000/register'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: '{"uid": "$uid", "first_name": "$firstName", "last_name": "$lastName", "email": "$email"}',
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -59,6 +108,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
+                TextField(
+                  controller: firstNameController,
+                  decoration: const InputDecoration(labelText: 'First Name'),
+                ),
+                TextField(
+                  controller: lastNameController,
+                  decoration: const InputDecoration(labelText: 'Last Name'),
+                ),
                 TextField(
                   controller: emailController,
                   decoration: const InputDecoration(labelText: 'Email'),

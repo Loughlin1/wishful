@@ -5,6 +5,9 @@ from .routes.wishlist_items import router as wishlist_items_router
 from .routes.sharing import router as sharing_router
 from .routes.recommendations import router as recommendations_router
 
+# User registration router
+from .routes.user import router as user_router
+
 app = FastAPI()
 
 # Allow CORS for all origins (for development)
@@ -21,3 +24,4 @@ app.include_router(wishlist_router)
 app.include_router(wishlist_items_router)
 app.include_router(sharing_router)
 app.include_router(recommendations_router)
+app.include_router(user_router)

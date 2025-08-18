@@ -1,5 +1,7 @@
 from .models import WishList, WishItem
 
+from .models import User
+
 
 # In-memory store (replace with DB/Firebase in production)
 wishlists = {
@@ -25,6 +27,9 @@ wishlists = {
         tag="Birthday"
     )
 }
+
+# In-memory user store (replace with DB/Firebase in production)
+users = {}
 
 
 share_tokens = {}

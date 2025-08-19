@@ -37,8 +37,7 @@ Wishful/
 - **Location:** `backend/app/`
 - **Run:**
   ```sh
-  cd backend
-  uvicorn app.main:app --reload
+make backend
   ```
 
 ## Frontend
@@ -46,8 +45,7 @@ Wishful/
 - **Location:** `frontend/`
 - **Run:**
   ```sh
-  cd frontend
-  flutter run
+make frontend
   ```
 
 ## Setup
@@ -81,6 +79,3 @@ Wishful/
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
-## License
-[MIT](LICENSE)

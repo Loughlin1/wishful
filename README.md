@@ -37,7 +37,7 @@ Wishful/
 - **Location:** `backend/app/`
 - **Run:**
   ```sh
-make backend
+  make backend
   ```
 
 ## Frontend
@@ -45,7 +45,7 @@ make backend
 - **Location:** `frontend/`
 - **Run:**
   ```sh
-make frontend
+  make frontend
   ```
 
 ## Setup

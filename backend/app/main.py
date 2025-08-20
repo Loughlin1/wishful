@@ -4,10 +4,10 @@ from .routes.wishlist import router as wishlist_router
 from .routes.wishlist_items import router as wishlist_items_router
 from .routes.sharing import router as sharing_router
 from .routes.recommendations import router as recommendations_router
-
-# User registration router
 from .routes.user import router as user_router
+from .db.database import init_db
 
+init_db()
 app = FastAPI()
 
 # Allow CORS for all origins (for development)

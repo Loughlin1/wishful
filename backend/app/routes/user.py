@@ -1,13 +1,24 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
-from ..models import User
-from ..db import users
+from sqlalchemy.orm import Session
+from ..models import UserRequest
+from ..db.database import SessionLocal
+from ..db.crud import get_user_by_uid, create_user
 from ..auth import verify_token
+
 
 router = APIRouter()
 
-@router.post("/register", response_model=User)
-def register_user(user: User, request: Request):
-    if user.uid in users:
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@router.post("/register", response_model=UserRequest)
+def register_user(user: UserRequest, request: Request, db: Session = Depends(get_db)):
+    if get_user_by_uid(db, user.uid):
         raise HTTPException(status_code=400, detail="User already exists")
-    users[user.uid] = user
+    create_user(db, user)
     return user

@@ -1,16 +1,27 @@
+
 from fastapi import APIRouter, Depends, Request, HTTPException
-from ..models import WishList
+from sqlalchemy.orm import Session
+from ..models import WishListRequest
 from ..auth import verify_token
-from ..db import wishlists, share_tokens
+from ..db.database import SessionLocal
+from ..db.crud import get_wishlist_by_id, share_wishlist_with_user
 from ..config import settings
 import secrets
 
 router = APIRouter()
 
+share_tokens = {}
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 @router.post("/wishlists/{wishlist_id}/share")
-def share_wishlist(wishlist_id: int, request: Request, user=Depends(verify_token)):
-    wishlist = wishlists.get(wishlist_id)
+def share_wishlist(wishlist_id: int, request: Request, user=Depends(verify_token), db: Session = Depends(get_db)):
+    wishlist = get_wishlist_by_id(db, wishlist_id)
     if not wishlist:
         raise HTTPException(status_code=404, detail="Wishlist not found")
     if wishlist.owner_id != user['uid']:
@@ -21,15 +32,15 @@ def share_wishlist(wishlist_id: int, request: Request, user=Depends(verify_token
     return {"link": link, "token": token}
 
 @router.post("/wishlists/share/{token}")
-def accept_shared_wishlist(token: str, request: Request, user=Depends(verify_token)):
+def accept_shared_wishlist(token: str, request: Request, user=Depends(verify_token), db: Session = Depends(get_db)):
     entry = share_tokens.get(token)
     if not entry:
         raise HTTPException(status_code=404, detail="Invalid or expired share link")
     wishlist_id, owner_id = entry
-    wishlist = wishlists.get(wishlist_id)
+    wishlist = get_wishlist_by_id(db, wishlist_id)
     if not wishlist:
         raise HTTPException(status_code=404, detail="Wishlist not found")
-    if user['uid'] not in (wishlist.shared_with or []):
-        wishlist.shared_with.append(user['uid'])
+    # Add user to shared_with table
+    share_wishlist_with_user(db, wishlist_id, user['uid'])
     del share_tokens[token]
     return {"message": "Wishlist shared successfully!"}

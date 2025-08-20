@@ -23,7 +23,11 @@ class _LoginScreenState extends State<LoginScreen> {
         password: passwordController.text.trim(),
       );
     } on FirebaseAuthException catch (e) {
-      setState(() { errorMessage = e.message; });
+      if (e.code == 'user-not-found') {
+        setState(() { errorMessage = 'Email does not exist.'; });
+      } else {
+        setState(() { errorMessage = e.message; });
+      }
     } finally {
       setState(() { isLoading = false; });
     }

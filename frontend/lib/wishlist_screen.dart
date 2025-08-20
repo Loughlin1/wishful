@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'services.dart';
 import 'wishlist_details_screen.dart';
+import 'models.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class WishListScreen extends StatefulWidget {
@@ -11,12 +12,21 @@ class WishListScreen extends StatefulWidget {
 }
 
 class _WishListScreenState extends State<WishListScreen> {
-  late Future<List<dynamic>> _wishListsFuture;
+  late Future<List<WishList>> _wishListsFuture;
+
+  String _ownerFullName(WishList wishList) {
+    final first = wishList.ownerFirstName;
+    final last = wishList.ownerLastName;
+    if ((first != null && first.isNotEmpty) || (last != null && last.isNotEmpty)) {
+      return [first, last].where((e) => e != null && e.isNotEmpty).join(' ');
+    }
+    return wishList.name;
+  }
 
   @override
   void initState() {
     super.initState();
-    _wishListsFuture = WishListService().fetchWishLists();
+  _wishListsFuture = WishListService().fetchWishLists();
   }
 
   @override
@@ -24,8 +34,20 @@ class _WishListScreenState extends State<WishListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Wishful'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              if (mounted) {
+                Navigator.of(context).pushReplacementNamed('/login'); // Update with your login route
+              }
+            },
+          ),
+        ],
       ),
-      body: FutureBuilder<List<dynamic>>(
+      body: FutureBuilder<List<WishList>>(
         future: _wishListsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -47,8 +69,8 @@ class _WishListScreenState extends State<WishListScreen> {
           final wishLists = snapshot.data!;
           final user = FirebaseAuth.instance.currentUser;
           final userId = user?.uid;
-          final myWishlists = wishLists.where((w) => w['owner_id'] == userId).toList();
-          final sharedWishlists = wishLists.where((w) => w['owner_id'] != userId).toList();
+          final myWishlists = wishLists.where((w) => w.ownerId == userId).toList();
+          final sharedWishlists = wishLists.where((w) => w.ownerId != userId).toList();
           return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
@@ -72,8 +94,11 @@ class _WishListScreenState extends State<WishListScreen> {
                   ...myWishlists.map((wishList) => ListTile(
                     title: Row(
                       children: [
-                        Text(wishList['owner'] ?? 'No Name'),
-                        if (wishList['tag'] != null && wishList['tag'].toString().isNotEmpty) ...[
+                        Text(
+                          _ownerFullName(wishList),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        if (wishList.tag != null && wishList.tag!.isNotEmpty) ...[
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -82,14 +107,14 @@ class _WishListScreenState extends State<WishListScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              wishList['tag'],
+                              wishList.tag!,
                               style: const TextStyle(fontSize: 12, color: Colors.blue),
                             ),
                           ),
                         ],
                       ],
                     ),
-                    subtitle: Text('${wishList['items']?.length ?? 0} items'),
+                    subtitle: Text('${wishList.items.length} items'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -101,7 +126,7 @@ class _WishListScreenState extends State<WishListScreen> {
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           tooltip: 'Delete',
-                          onPressed: () => _confirmDeleteWishList(wishList['id']),
+                          onPressed: () => _confirmDeleteWishList(wishList.id),
                         ),
                         const Icon(Icons.chevron_right),
                       ],
@@ -130,8 +155,8 @@ class _WishListScreenState extends State<WishListScreen> {
                     ...sharedWishlists.map((wishList) => ListTile(
                       title: Row(
                         children: [
-                          Text(wishList['owner'] ?? 'No Name'),
-                          if (wishList['tag'] != null && wishList['tag'].toString().isNotEmpty) ...[
+                          Text(wishList.name),
+                          if (wishList.tag != null && wishList.tag!.isNotEmpty) ...[
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -140,14 +165,14 @@ class _WishListScreenState extends State<WishListScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                wishList['tag'],
+                                wishList.tag!,
                                 style: const TextStyle(fontSize: 12, color: Colors.blue),
                               ),
                             ),
                           ],
                         ],
                       ),
-                      subtitle: Text('${wishList['items']?.length ?? 0} items'),
+                      subtitle: Text('${wishList.items.length} items'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         Navigator.push(
@@ -238,17 +263,20 @@ class _WishListScreenState extends State<WishListScreen> {
   }
 
   Future<void> _createWishList(String name, String? tag) async {
-    final newWishList = {
-      'id': DateTime.now().millisecondsSinceEpoch,
-      'owner': name,
-      'items': [
-        {'id': 1, 'name': 'New Gift', 'reserved': false, 'reserved_by': null},
-      ],
-      'shared_with': [],
-      'tag': (tag != null && tag.isNotEmpty) ? tag : null,
-    };
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? '';
+    final newWishList = WishList(
+      id: DateTime.now().millisecondsSinceEpoch,
+      name: name,
+      ownerId: userId,
+      ownerFirstName: null,
+      ownerLastName: null,
+      items: [],
+      sharedWith: [],
+      tag: (tag != null && tag.isNotEmpty) ? tag : null,
+    );
     try {
-      await WishListService().createWishList(newWishList);
+      await WishListService().createWishList(newWishList.toJson());
       setState(() {
         _wishListsFuture = WishListService().fetchWishLists();
       });
@@ -261,9 +289,9 @@ class _WishListScreenState extends State<WishListScreen> {
     }
   }
   
-  void _showEditWishListDialog(Map wishList) {
-    final TextEditingController nameController = TextEditingController(text: wishList['owner'] ?? '');
-    String? selectedTag = wishList['tag'];
+  void _showEditWishListDialog(WishList wishList) {
+    final TextEditingController nameController = TextEditingController(text: wishList.name);
+    String? selectedTag = wishList.tag;
     showDialog(
       context: context,
       builder: (context) => FutureBuilder<List<String>>(
@@ -315,13 +343,19 @@ class _WishListScreenState extends State<WishListScreen> {
     );
   }
 
-  Future<void> _editWishList(Map wishList, String newName, String? newTag) async {
+  Future<void> _editWishList(WishList wishList, String newName, String? newTag) async {
     try {
-      final updatedWishList = Map<String, dynamic>.from(wishList);
-      updatedWishList['owner'] = newName;
-      // Always send the tag field, even if empty, to allow clearing
-      updatedWishList['tag'] = (newTag != null && newTag.isNotEmpty) ? newTag : '';
-      await WishListService().updateWishList(wishList['id'], updatedWishList);
+      final updatedWishList = WishList(
+        id: wishList.id,
+        name: newName,
+        ownerId: wishList.ownerId,
+        ownerFirstName: wishList.ownerFirstName,
+        ownerLastName: wishList.ownerLastName,
+        items: wishList.items,
+        sharedWith: wishList.sharedWith,
+        tag: (newTag != null && newTag.isNotEmpty) ? newTag : '',
+      );
+      await WishListService().updateWishList(wishList.id, updatedWishList.toJson());
       setState(() {
         _wishListsFuture = WishListService().fetchWishLists();
       });

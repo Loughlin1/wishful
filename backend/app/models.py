@@ -8,32 +8,24 @@ class TagEnum(str, Enum):
     other = "Other"
 
 
-class WishItem(BaseModel):
+class WishItemRequest(BaseModel):
     id: int
     name: str
     reserved: bool = False
     reserved_by: Optional[str] = None
 
 
-class WishList(BaseModel):
+class WishListRequest(BaseModel):
     id: int
-    owner: str
+    name: str
     owner_id: str
-    items: List[WishItem]
-    shared_with: Optional[List[str]] = []
-    tag: Optional[TagEnum] = None
-
-
-class WishListCreate(BaseModel):
-    id: int
-    owner: str
-    items: List[WishItem]
+    items: List[WishItemRequest]
     shared_with: Optional[List[str]] = []
     tag: Optional[TagEnum] = None
 
 
 # User model for registration
-class User(BaseModel):
+class UserRequest(BaseModel):
     uid: str
     first_name: str
     last_name: str

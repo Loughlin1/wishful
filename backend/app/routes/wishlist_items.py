@@ -35,14 +35,16 @@ def add_item_to_wishlist_route(wishlist_id: int, item: WishItemRequest, request:
         wishlist_id=wishlist_id,
         name=item.name,
         reserved=item.reserved,
-        reserved_by=item.reserved_by
+        reserved_by=item.reserved_by,
+        link=item.link
     )
     db_item = add_item_to_wishlist(db, db_item)
     return WishItemRequest(
         id=db_item.id,
         name=db_item.name,
         reserved=db_item.reserved,
-        reserved_by=db_item.reserved_by
+        reserved_by=db_item.reserved_by,
+        link=db_item.link
     )
 
 
@@ -59,7 +61,8 @@ def update_wishlist_item(wishlist_id: int, item_id: int, item_update: dict = Bod
         raise HTTPException(status_code=404, detail="Item not found")
     if 'name' in item_update:
         item.name = item_update['name']
-    # Optionally update other fields
+    if 'link' in item_update:
+        item.link = item_update['link']
     db.commit()
     db.refresh(item)
     return {"message": "Item updated!"}

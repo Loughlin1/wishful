@@ -55,7 +55,8 @@ def get_shared_wishlists_for_user(db: Session, user_id: str):
             id=item.id,
             name=item.name,
             reserved=item.reserved,
-            reserved_by=item.reserved_by
+            reserved_by=item.reserved_by,
+            link=item.link
         ) for item in db_wishlist.items]
         shared_with = [sw.user_id for sw in db_wishlist.shared_with]
         result.append(WishListRequest(
@@ -69,3 +70,4 @@ def get_shared_wishlists_for_user(db: Session, user_id: str):
             tag=db_wishlist.tag
         ))
     return result
+

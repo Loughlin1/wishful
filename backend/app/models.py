@@ -8,11 +8,13 @@ class TagEnum(str, Enum):
     other = "Other"
 
 
+
 class WishItemRequest(BaseModel):
     id: int
     name: str
     reserved: bool = False
     reserved_by: Optional[str] = None
+    link: Optional[str] = None
 
 
 class WishListRequest(BaseModel):

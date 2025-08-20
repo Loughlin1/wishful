@@ -3,12 +3,14 @@ class WishItem {
   final String name;
   final bool reserved;
   final String? reservedBy;
+  final String? link;
 
   WishItem({
     required this.id,
     required this.name,
     this.reserved = false,
     this.reservedBy,
+    this.link,
   });
 
   factory WishItem.fromJson(Map<String, dynamic> json) => WishItem(
@@ -16,6 +18,7 @@ class WishItem {
         name: json['name'],
         reserved: json['reserved'] ?? false,
         reservedBy: json['reserved_by'],
+        link: json['link'],
       );
 
   Map<String, dynamic> toJson() => {
@@ -23,6 +26,7 @@ class WishItem {
         'name': name,
         'reserved': reserved,
         'reserved_by': reservedBy,
+        'link': link,
       };
 }
 

@@ -28,6 +28,7 @@ class WishItemDB(Base):
     name = Column(String)
     reserved = Column(Boolean, default=False)
     reserved_by = Column(String, nullable=True)
+    link = Column(String, nullable=True)
     wishlist = relationship('WishListDB', back_populates='items')
 
 class SharedWithDB(Base):

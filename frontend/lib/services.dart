@@ -28,12 +28,12 @@ class WishListService {
     }
   }
 
-  Future<void> editItemInWishList(int wishlistId, int itemId, String newName) async {
+  Future<void> editItemInWishList(int wishlistId, int itemId, String newName, String link) async {
     final headers = await _getAuthHeaders(json: true);
     final response = await http.put(
       Uri.parse('$baseUrl/wishlists/$wishlistId/items/$itemId'),
       headers: headers,
-      body: jsonEncode({'name': newName}),
+      body: jsonEncode({'name': newName, 'link': link}),
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to edit item');

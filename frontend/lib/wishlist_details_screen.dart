@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'services.dart';
 import 'models.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 class WishListDetailsScreen extends StatefulWidget {
@@ -36,15 +37,26 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
   }
 
   void _showEditItemDialog(WishItem item) {
-    final TextEditingController controller = TextEditingController(text: item.name);
+    final TextEditingController nameController = TextEditingController(text: item.name);
+    final TextEditingController linkController = TextEditingController(text: item.link ?? '');
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Edit Item'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: 'Item name'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(hintText: 'Item name'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: linkController,
+                decoration: const InputDecoration(hintText: 'Link (optional)'),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -56,9 +68,10 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                final name = controller.text.trim();
+                final name = nameController.text.trim();
+                final link = linkController.text.trim();
                 if (name.isNotEmpty) {
-                  await _editItem(item.id, name);
+                  await _editItem(item.id, name, link);
                   if (!mounted) return;
                   Navigator.of(context).pop();
                 }
@@ -71,9 +84,9 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
     );
   }
 
-  Future<void> _editItem(int itemId, String newName) async {
+  Future<void> _editItem(int itemId, String newName, String link) async {
     try {
-      await WishListService().editItemInWishList(widget.wishList.id, itemId, newName);
+      await WishListService().editItemInWishList(widget.wishList.id, itemId, newName, link);
       setState(() {
         items = items.map((item) {
           if (item.id == itemId) {
@@ -82,6 +95,7 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
               name: newName,
               reserved: item.reserved,
               reservedBy: item.reservedBy,
+              link: link.isNotEmpty ? link : null,
             );
           }
           return item;
@@ -138,15 +152,26 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
   }
 
   void _showAddItemDialog() {
-    final TextEditingController controller = TextEditingController();
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController linkController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Add Item'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(hintText: 'Item name'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(hintText: 'Item name'),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: linkController,
+                decoration: const InputDecoration(hintText: 'Link (optional)'),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -158,9 +183,10 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                final name = controller.text.trim();
+                final name = nameController.text.trim();
+                final link = linkController.text.trim();
                 if (name.isNotEmpty) {
-                  await _addItem(name);
+                  await _addItem(name, link);
                   if (!mounted) return;
                   Navigator.of(context).pop();
                 }
@@ -173,12 +199,13 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
     );
   }
 
-  Future<void> _addItem(String name) async {
+  Future<void> _addItem(String name, String link) async {
     final newItem = WishItem(
       id: DateTime.now().millisecondsSinceEpoch,
       name: name,
       reserved: false,
       reservedBy: null,
+      link: link.isNotEmpty ? link : null,
     );
     try {
       await WishListService().addItemToWishList(widget.wishList.id, newItem.toJson());
@@ -233,9 +260,34 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
                             final item = items[index];
                             return ListTile(
                               title: Text(item.name),
-                              subtitle: item.reserved
-                                  ? Text('Reserved by ${item.reservedBy ?? 'someone'}', style: const TextStyle(color: Colors.red))
-                                  : const Text('Available'),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (item.link != null && item.link!.isNotEmpty)
+                                    GestureDetector(
+                                      onTap: () async {
+                                        final url = Uri.parse(item.link!);
+                                        if (await canLaunchUrl(url)) {
+                                          await launchUrl(url);
+                                        }
+                                      },
+                                      child: Text(
+                                        item.link!.length > 40
+                                            ? '${item.link!.substring(0, 37)}...'
+                                            : item.link!,
+                                        style: const TextStyle(
+                                          color: Colors.blue,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  item.reserved
+                                      ? Text('Reserved by ${item.reservedBy ?? 'someone'}', style: const TextStyle(color: Colors.red))
+                                      : const Text('Available'),
+                                ],
+                              ),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

@@ -2,7 +2,7 @@ import logging
 import os
 
 # Ensure the log directory exists
-LOG_DIR = os.path.join(os.path.dirname(__file__), '../../frontend/app')
+LOG_DIR = os.path.join(os.path.dirname(__file__), '../')
 LOG_PATH = os.path.abspath(os.path.join(LOG_DIR, 'wishful_backend.log'))
 os.makedirs(LOG_DIR, exist_ok=True)
 

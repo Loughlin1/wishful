@@ -7,6 +7,73 @@ import 'models.dart';
 class WishListService {
   static const String baseUrl = 'http://localhost:8000';
 
+  // Share a wishlist by email (returns a share link)
+  Future<String> shareWishlistByEmail(int wishlistId, String email) async {
+    final headers = await _getAuthHeaders(json: true);
+    final response = await http.post(
+      Uri.parse('$baseUrl/wishlists/$wishlistId/share'),
+      headers: headers,
+      body: jsonEncode({'email': email}),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['link'] ?? '';
+    } else {
+      final error = jsonDecode(response.body)['detail'];
+      throw Exception('Failed to share wishlist: $error');
+    }
+  }
+
+  // Create a group
+  Future<Map<String, dynamic>> createGroup(String name) async {
+    final headers = await _getAuthHeaders(json: true);
+    final response = await http.post(
+      Uri.parse('$baseUrl/groups'),
+      headers: headers,
+      body: jsonEncode({'name': name}),
+    );
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body)['detail'];
+      throw Exception('Failed to create group: $error');
+    }
+  }
+
+  // Add a member to a group by email
+  Future<String> addMemberToGroup(int groupId, String email) async {
+    final headers = await _getAuthHeaders(json: true);
+    final response = await http.post(
+      Uri.parse('$baseUrl/groups/$groupId/members'),
+      headers: headers,
+      body: jsonEncode({'email': email}),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['message'] ?? '';
+    } else {
+      final error = jsonDecode(response.body)['detail'];
+      throw Exception('Failed to add member: $error');
+    }
+  }
+
+  // Share a wishlist with a group
+  Future<String> shareWishlistWithGroup(int wishlistId, int groupId) async {
+    final headers = await _getAuthHeaders(json: true);
+    final response = await http.post(
+      Uri.parse('$baseUrl/wishlists/$wishlistId/share-group'),
+      headers: headers,
+      body: jsonEncode({'group_id': groupId}),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['message'] ?? '';
+    } else {
+      final error = jsonDecode(response.body)['detail'];
+      throw Exception('Failed to share wishlist with group: $error');
+    }
+  }
+
   Future<List<String>> fetchTagOptions() async {
     final headers = await _getAuthHeaders();
     final response = await http.get(Uri.parse('$baseUrl/wishlist-tags'), headers: headers);

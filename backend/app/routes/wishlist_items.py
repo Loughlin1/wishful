@@ -1,6 +1,7 @@
 
 from typing import Optional
 from fastapi import APIRouter, Depends, Request, HTTPException, Body
+from ..utils.logger import logger
 from sqlalchemy.orm import Session
 from ..models import WishItemRequest
 from ..auth import verify_token
@@ -23,6 +24,7 @@ def get_db():
 # Create a wishlist item (owner only)
 @router.post("/wishlists/{wishlist_id}/items")
 def add_item_to_wishlist_route(wishlist_id: int, item: WishItemRequest, request: Request = None, user=Depends(verify_token), db: Session = Depends(get_db)):
+    logger.info(f"[add_item_to_wishlist] User {user['uid']} adding item to wishlist {wishlist_id}")
     wishlist = get_wishlist_by_id(db, wishlist_id)
     if not wishlist:
         raise HTTPException(status_code=404, detail="Wishlist not found")
@@ -51,6 +53,7 @@ def add_item_to_wishlist_route(wishlist_id: int, item: WishItemRequest, request:
 # Update a wishlist item (owner only)
 @router.put("/wishlists/{wishlist_id}/items/{item_id}")
 def update_wishlist_item(wishlist_id: int, item_id: int, item_update: dict = Body(...), user=Depends(verify_token), db: Session = Depends(get_db)):
+    logger.info(f"[update_wishlist_item] User {user['uid']} updating item {item_id} in wishlist {wishlist_id}")
     wishlist = get_wishlist_by_id(db, wishlist_id)
     if not wishlist:
         raise HTTPException(status_code=404, detail="Wishlist not found")
@@ -71,6 +74,7 @@ def update_wishlist_item(wishlist_id: int, item_id: int, item_update: dict = Bod
 # Delete a wishlist item (owner only)
 @router.delete("/wishlists/{wishlist_id}/items/{item_id}")
 def delete_wishlist_item(wishlist_id: int, item_id: int, user=Depends(verify_token), db: Session = Depends(get_db)):
+    logger.info(f"[delete_wishlist_item] User {user['uid']} deleting item {item_id} from wishlist {wishlist_id}")
     wishlist = get_wishlist_by_id(db, wishlist_id)
     if not wishlist:
         raise HTTPException(status_code=404, detail="Wishlist not found")
@@ -87,6 +91,7 @@ def delete_wishlist_item(wishlist_id: int, item_id: int, user=Depends(verify_tok
 # Reserve a gift (shared_with only)
 @router.post("/wishlists/{wishlist_id}/reserve/{item_id}")
 def reserve_gift(wishlist_id: int, item_id: int, reserved_by: Optional[str] = None, request: Request = None, user=Depends(verify_token), db: Session = Depends(get_db)):
+    logger.info(f"[reserve_gift] User {user['uid']} reserving item {item_id} in wishlist {wishlist_id}")
     wishlist = get_wishlist_by_id(db, wishlist_id)
     if not wishlist:
         raise HTTPException(status_code=404, detail="Wishlist not found")

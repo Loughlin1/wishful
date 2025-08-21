@@ -32,3 +32,7 @@ class UserRequest(BaseModel):
     first_name: str
     last_name: str
     email: str
+
+
+class EmailRequest(BaseModel):
+    email: str

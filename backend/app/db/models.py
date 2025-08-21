@@ -36,3 +36,21 @@ class SharedWithDB(Base):
     wishlist_id = Column(Integer, ForeignKey('wishlists.id'), primary_key=True)
     user_id = Column(String, primary_key=True)
     wishlist = relationship('WishListDB', back_populates='shared_with')
+
+class GroupDB(Base):
+    __tablename__ = 'groups'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    owner_id = Column(String, ForeignKey('users.uid'))
+    members = relationship('GroupMemberDB', back_populates='group', cascade='all, delete-orphan')
+
+class GroupMemberDB(Base):
+    __tablename__ = 'group_members'
+    group_id = Column(Integer, ForeignKey('groups.id'), primary_key=True)
+    user_id = Column(String, ForeignKey('users.uid'), primary_key=True)
+    group = relationship('GroupDB', back_populates='members')
+
+class SharedWithGroupDB(Base):
+    __tablename__ = 'shared_with_group'
+    wishlist_id = Column(Integer, ForeignKey('wishlists.id'), primary_key=True)
+    group_id = Column(Integer, ForeignKey('groups.id'), primary_key=True)

@@ -14,6 +14,55 @@ class WishListDetailsScreen extends StatefulWidget {
 }
 
 class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
+  void _showShareDialog() {
+    final TextEditingController emailController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Share Wishlist'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(hintText: 'Enter email to share with'),
+              ),
+              // You can add group sharing UI here if needed
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final email = emailController.text.trim();
+                if (email.isNotEmpty) {
+                  try {
+                    final link = await WishListService().shareWishlistByEmail(widget.wishList.id, email);
+                    if (!mounted) return;
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Share link sent to $email')),
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to share: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Share'),
+            ),
+          ],
+        );
+      },
+    );
+  }
   late List<WishItem> items;
   late String? ownerId;
   late String? currentUserId;
@@ -226,7 +275,37 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
     final isOwner = currentUserId != null && currentUserId == ownerId;
     final isShared = currentUserId != null && (sharedWith?.contains(currentUserId) ?? false);
     return Scaffold(
-      appBar: AppBar(title: Text(widget.wishList.name)),
+      appBar: AppBar(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Text(widget.wishList.name),
+            ),
+            if (isOwner)
+              IconButton(
+                icon: const Icon(Icons.share, color: Colors.black),
+                tooltip: 'Share Wishlist',
+                onPressed: _showShareDialog,
+                padding: const EdgeInsets.only(left: 0, right: 0),
+                constraints: BoxConstraints(),
+              ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.black),
+            tooltip: 'Logout',
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              if (context.mounted) {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              }
+            },
+          ),
+        ],
+      ),
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(

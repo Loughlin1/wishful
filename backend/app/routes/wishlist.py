@@ -1,5 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, Request, HTTPException, Body
+from ..utils.logger import logger
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from ..models import WishListRequest, WishItemRequest, TagEnum
@@ -24,6 +25,7 @@ def get_db():
 # Read wishlists (owner or shared_with)
 @router.get("/wishlists", response_model=list[WishListRequest])
 def get_wishlists(request: Request, user=Depends(verify_token), db: Session = Depends(get_db)):
+    logger.info(f"[get_wishlists] User {user['uid']} fetching wishlists")
     user_id = user['uid']
     db_wishlists = get_wishlists_for_user(db, user_id)
     result = []
@@ -52,6 +54,7 @@ def get_wishlists(request: Request, user=Depends(verify_token), db: Session = De
 # Create a wishlist (owner only)
 @router.post("/wishlists", response_model=WishListRequest)
 def create_wishlist(wishlist: WishListRequest, request: Request, user=Depends(verify_token), db: Session = Depends(get_db)):
+    logger.info(f"[create_wishlist] User {user['uid']} creating wishlist {wishlist.id}")
     if get_wishlist_by_id(db, wishlist.id):
         raise HTTPException(status_code=400, detail="Wishlist already exists")
     
@@ -77,6 +80,7 @@ def create_wishlist(wishlist: WishListRequest, request: Request, user=Depends(ve
 # Edit a wishlist (owner only)
 @router.put("/wishlists/{wishlist_id}", response_model=WishListRequest)
 def update_wishlist(wishlist_id: int, wishlist_update: WishListRequest, request: Request, user=Depends(verify_token), db: Session = Depends(get_db)):
+    logger.info(f"[update_wishlist] User {user['uid']} updating wishlist {wishlist_id}")
     wishlist = get_wishlist_by_id(db, wishlist_id)
     if not wishlist:
         raise HTTPException(status_code=404, detail="Wishlist not found")
@@ -93,6 +97,7 @@ def update_wishlist(wishlist_id: int, wishlist_update: WishListRequest, request:
 # Delete a wishlist (owner only)
 @router.delete("/wishlists/{wishlist_id}")
 def delete_wishlist(wishlist_id: int, user=Depends(verify_token), db: Session = Depends(get_db)):
+    logger.info(f"[delete_wishlist] User {user['uid']} deleting wishlist {wishlist_id}")
     wishlist = get_wishlist_by_id(db, wishlist_id)
     if not wishlist:
         raise HTTPException(status_code=404, detail="Wishlist not found")
@@ -106,5 +111,6 @@ def delete_wishlist(wishlist_id: int, user=Depends(verify_token), db: Session = 
 # Endpoint to get available tag options
 @router.get("/wishlist-tags", response_model=list[str])
 def get_wishlist_tags():
+    logger.info(f"[get_wishlist_tags] Fetching wishlist tags")
     return [tag.value for tag in TagEnum]
 

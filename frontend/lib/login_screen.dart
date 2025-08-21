@@ -1,6 +1,8 @@
+import 'wishful_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'signup_screen.dart';
+import 'package:go_router/go_router.dart';
+import 'guest_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,6 +12,48 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  String? shareToken;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final uri = Uri.base;
+    // Check for /share/<token> or ?token= in the URL
+    final segments = uri.pathSegments;
+    if (segments.isNotEmpty && segments.first == 'share' && segments.length > 1) {
+      shareToken = segments[1];
+    } else if (uri.queryParameters['token'] != null) {
+      shareToken = uri.queryParameters['token'];
+    }
+  }
+
+  Future<void> _signInAsGuest() async {
+    if (shareToken == null) return;
+    final guestService = GuestService();
+    final guestUid = await guestService.acceptShareAsGuest(shareToken!);
+    if (guestUid != null) {
+      // Optionally store guestUid in local storage for session
+      // Fetch the shared wishlist (for demo, just show a placeholder)
+      // You may want to fetch the wishlist by token or by guestUid
+  // Navigate to wishlist details using go_router (you may want to add a route for this)
+  // For now, just go to home
+  if (mounted) context.go('/wishlists');
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Guest Sign-In Failed'),
+          content: const Text('Could not sign in as guest.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   String? errorMessage;
@@ -22,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
+      if (mounted) context.go('/wishlists');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         setState(() { errorMessage = 'Email does not exist.'; });
@@ -36,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Wishful')),
+      appBar: const WishfulAppBar(),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),
@@ -80,14 +125,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           const SizedBox(height: 12),
                           TextButton(
                             onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const SignUpScreen(),
-                                ),
-                              );
+                              context.go('/signup');
                             },
                             child: const Text('Don\'t have an account? Sign Up'),
                           ),
+                          if (shareToken != null) ...[
+                            const SizedBox(height: 24),
+                            ElevatedButton.icon(
+                              icon: const Icon(Icons.person_outline),
+                              label: const Text('Sign in as Guest'),
+                              onPressed: _signInAsGuest,
+                            ),
+                          ],
                         ],
                       ),
               ],

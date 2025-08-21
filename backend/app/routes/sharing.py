@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from ..auth import verify_token
 from ..models import EmailRequest
 from ..db.models import GroupDB, GroupMemberDB, SharedWithGroupDB, UserDB, WishListDB
+import uuid
 from ..db.crud import get_wishlist_by_id, share_wishlist_with_user
 from ..db.database import SessionLocal
 from ..utils.email_utils import send_invite_email_background
@@ -129,7 +130,6 @@ def share_wishlist(
 
 @router.post("/wishlists/share/{token}")
 def accept_shared_wishlist(token: str, request: Request, user=Depends(verify_token), db: Session = Depends(get_db)):
-    logger.info(f"[accept_shared_wishlist] User {user['uid']} accepting shared wishlist with token {token}")
     try:
         entry = share_tokens.get(token)
         if not entry:
@@ -140,11 +140,53 @@ def accept_shared_wishlist(token: str, request: Request, user=Depends(verify_tok
         if not wishlist:
             logger.warning(f"[accept_shared_wishlist] Wishlist {wishlist_id} not found for token {token}")
             raise HTTPException(status_code=404, detail="Wishlist not found")
-        share_wishlist_with_user(db, wishlist_id, user['uid'])
-        del share_tokens[token]
-        logger.info(f"[accept_shared_wishlist] User {user['uid']} added to shared_with for wishlist {wishlist_id}")
-        return {"message": "Wishlist shared successfully!"}
+        # If user is authenticated, use their uid. Otherwise, create a guest user.
+        guest_mode = False
+        guest_uid = None
+        try:
+            user_id = user['uid']
+        except Exception:
+            guest_mode = True
+            guest_uid = f"guest-{uuid.uuid4()}"
+            # Create guest user in DB if not exists
+            if not db.query(UserDB).filter(UserDB.uid == guest_uid).first():
+                db.add(UserDB(uid=guest_uid, first_name="Guest", last_name="User", email=None))
+                db.commit()
+        if guest_mode:
+            share_wishlist_with_user(db, wishlist_id, guest_uid)
+            del share_tokens[token]
+            logger.info(f"[accept_shared_wishlist] Guest user {guest_uid} added to shared_with for wishlist {wishlist_id}")
+            return {"message": "Wishlist shared successfully!", "guest_uid": guest_uid}
+        else:
+            share_wishlist_with_user(db, wishlist_id, user_id)
+            del share_tokens[token]
+            logger.info(f"[accept_shared_wishlist] User {user_id} added to shared_with for wishlist {wishlist_id}")
+            return {"message": "Wishlist shared successfully!"}
     except Exception as e:
         logger.error(f"[accept_shared_wishlist] Error: {e}")
         raise
+
+
+@router.get("/share/{token}/info")
+def get_invite_info(token: str, db: Session = Depends(get_db)):
+    entry = share_tokens.get(token)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Invalid or expired invite link")
+    wishlist_id, owner_id = entry
+    owner = db.query(UserDB).filter(UserDB.uid == owner_id).first()
+    return {
+        "wishlist_id": wishlist_id,
+        "invite_username": f"{owner.first_name} {owner.last_name}" if owner else "Someone"
+    }
+
+
+@router.post("/wishlists/share/{token}/accept")
+def accept_invite_after_signup(token: str, user_id: str = Body(...), db: Session = Depends(get_db)):
+    entry = share_tokens.get(token)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Invalid or expired invite link")
+    wishlist_id, _ = entry
+    share_wishlist_with_user(db, wishlist_id, user_id)
+    del share_tokens[token]
+    return {"message": "You now have access to the shared wishlist!"}
 

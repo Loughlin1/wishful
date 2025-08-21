@@ -7,6 +7,51 @@ import 'models.dart';
 class WishListService {
   static const String baseUrl = 'http://localhost:8000';
 
+
+  Future<bool> registerUser({
+    required String uid,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String? token,
+  }) async {
+    if (token == null) return false;
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/register'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: '{"uid": "$uid", "first_name": "$firstName", "last_name": "$lastName", "email": "$email"}',
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> acceptInvite(String inviteCode, String userId) async {
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/wishlists/share/$inviteCode/accept'),
+        headers: {'Content-Type': 'application/json'},
+        body: '{"user_id": "$userId"}',
+      );
+    } catch (e) {
+      // Optionally handle error
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchInviteInfo(String inviteCode) async {
+    final response = await http.get(Uri.parse('$baseUrl/share/$inviteCode/info'));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Invalid or expired invite link');
+    }
+  }
+
   // Share a wishlist by email (returns a share link)
   Future<String> shareWishlistByEmail(int wishlistId, String email) async {
     final headers = await _getAuthHeaders(json: true);

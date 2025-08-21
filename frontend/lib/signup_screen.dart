@@ -1,9 +1,14 @@
+import 'wishful_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
+
+import 'services.dart';
+import 'package:go_router/go_router.dart';
+
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  final String? inviteCode;
+  const SignUpScreen({Key? key, this.inviteCode}) : super(key: key);
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -43,7 +48,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (user != null) {
         // Send user info to backend
         final token = await user.getIdToken();
-        final response = await registerUser(
+  final response = await WishListService().registerUser(
           uid: user.uid,
           firstName: firstNameController.text.trim(),
           lastName: lastNameController.text.trim(),
@@ -54,8 +59,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
           setState(() { errorMessage = 'Failed to register user on server.'; });
           return;
         }
+        // If inviteCode is present, accept invite after signup
+        if (widget.inviteCode != null) {
+          await WishListService().acceptInvite(widget.inviteCode!, user.uid);
+        }
       }
-      if (mounted) Navigator.of(context).pop(); // Go back to login
+  if (mounted) context.go('/wishlists'); // Go to wishlists after signup
     } on FirebaseAuthException catch (e) {
       setState(() { errorMessage = e.message; });
     } finally {
@@ -63,33 +72,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  Future<bool> registerUser({
-    required String uid,
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String? token,
-  }) async {
-    if (token == null) return false;
-    try {
-      final response = await http.post(
-        Uri.parse('http://localhost:8000/register'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: '{"uid": "$uid", "first_name": "$firstName", "last_name": "$lastName", "email": "$email"}',
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up')),
+      appBar: const WishfulAppBar(),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 400),

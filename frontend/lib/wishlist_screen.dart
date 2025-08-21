@@ -3,6 +3,8 @@ import 'services.dart';
 import 'wishlist_details_screen.dart';
 import 'models.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
+import 'wishful_app_bar.dart';
 
 class WishListScreen extends StatefulWidget {
   const WishListScreen({super.key});
@@ -32,21 +34,7 @@ class _WishListScreenState extends State<WishListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Wishful'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            tooltip: 'Logout',
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              if (mounted) {
-                Navigator.of(context).pushReplacementNamed('/login'); // Update with your login route
-              }
-            },
-          ),
-        ],
-      ),
+      appBar: const WishfulAppBar(),
       body: FutureBuilder<List<WishList>>(
         future: _wishListsFuture,
         builder: (context, snapshot) {

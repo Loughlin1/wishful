@@ -13,3 +13,6 @@ frontend:
 
 frontend-web:
 	cd frontend && flutter run -d web-server --web-port=8080
+
+flutter-update:
+	cd frontend && flutter pub get

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'services.dart';
 import 'models.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'wishful_app_bar.dart';
 
 
 class WishListDetailsScreen extends StatefulWidget {
@@ -41,7 +42,7 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
                 final email = emailController.text.trim();
                 if (email.isNotEmpty) {
                   try {
-                    final link = await WishListService().shareWishlistByEmail(widget.wishList.id, email);
+                    // final link = await WishListService().shareWishlistByEmail(widget.wishList.id, email);
                     if (!mounted) return;
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -275,43 +276,38 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
     final isOwner = currentUserId != null && currentUserId == ownerId;
     final isShared = currentUserId != null && (sharedWith?.contains(currentUserId) ?? false);
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Text(widget.wishList.name),
-            ),
-            if (isOwner)
-              IconButton(
-                icon: const Icon(Icons.share, color: Colors.black),
-                tooltip: 'Share Wishlist',
-                onPressed: _showShareDialog,
-                padding: const EdgeInsets.only(left: 0, right: 0),
-                constraints: BoxConstraints(),
-              ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black),
-            tooltip: 'Logout',
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              if (context.mounted) {
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              }
-            },
-          ),
-        ],
-      ),
+      appBar: const WishfulAppBar(),
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500),
           child: Column(
             children: [
+              // Title row above the items
+              Padding(
+                padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.wishList.name,
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    if (isOwner)
+                      IconButton(
+                        icon: const Icon(Icons.share, color: Colors.black),
+                        tooltip: 'Share Wishlist',
+                        onPressed: _showShareDialog,
+                        padding: const EdgeInsets.only(left: 0, right: 0),
+                        constraints: BoxConstraints(),
+                      ),
+                  ],
+                ),
+              ),
               Expanded(
                 child: items.isEmpty
                     ? Column(

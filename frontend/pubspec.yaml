@@ -36,6 +36,7 @@ dependencies:
   http: ^1.5.0
   firebase_core: ^4.0.0
   firebase_auth: ^6.0.1
+  go_router: ^16.1.0
 
 dev_dependencies:
   flutter_test:
@@ -59,4 +60,5 @@ flutter:
   uses-material-design: true
   assets:
     - .env
+    - web/icons/
 

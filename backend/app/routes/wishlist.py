@@ -37,14 +37,13 @@ def get_wishlists(request: Request, user=Depends(verify_token), db: Session = De
             reserved_by=item.reserved_by,
             link=item.link,
         ) for item in db_wishlist.items]
-        shared_with = [sw.user_id for sw in db_wishlist.shared_with]
+        shared_with = [sw.uid for sw in db_wishlist.shared_with]
         result.append(WishListRequest(
             id=db_wishlist.id,
             name=db_wishlist.name,
             owner_id=db_wishlist.owner_id,
-            owner_first_name=db_wishlist.owner_user.first_name,
-            owner_last_name=db_wishlist.owner_user.last_name,
-            items=items,
+            owner_first_name=db_wishlist.owner_user.first_name.capitalize() if db_wishlist.owner_user.first_name else "",
+            owner_last_name=db_wishlist.owner_user.last_name.capitalize() if db_wishlist.owner_user.last_name else "",            items=items,
             shared_with=shared_with,
             tag=db_wishlist.tag
         ))

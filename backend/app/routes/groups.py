@@ -5,8 +5,9 @@ from ..auth import verify_token
 from ..db.models import GroupDB, GroupMemberDB, UserDB
 from ..db.database import SessionLocal
 from ..utils.logger import logger
-from ..utils.email_utils import send_invite_email_background
+from ..utils.email_utils import send_invite_email_background, is_valid_email
 from ..config import settings
+from ..models import CreateGroupRequest
 
 
 router = APIRouter()
@@ -21,15 +22,28 @@ def get_db():
 
 
 @router.post("/groups")
-def create_group(name: str = Body(...), user=Depends(verify_token), db: Session = Depends(get_db)):
+def create_group(request: CreateGroupRequest, user=Depends(verify_token), db: Session = Depends(get_db)):
     """Create a new group."""
-    logger.info(f"[create_group] User {user['uid']} creating group '{name}'")
     try:
+        name = request.name
+        users = request.users
+        # Check if Group Name already exists
+        if db.query(GroupDB).filter_by(name=name).first():
+            raise HTTPException(status_code=409, detail="Group name already exists")
+        logger.info(f"[create_group] User {user['uid']} creating group '{name}' with users {users}")
+        for user_email in users:
+            if not is_valid_email(user_email):
+                raise HTTPException(status_code=400, detail=f"Invalid email: {user_email}")
+        users_objects = [UserDB(email=user_email) for user_email in users]
+        logger.debug(f"[create_group] Users objects: {users_objects}")
         group = GroupDB(name=name, owner_id=user['uid'])
         db.add(group)
         db.commit()
         db.refresh(group)
         db.add(GroupMemberDB(group_id=group.id, user_id=user['uid']))
+        for user_obj in users_objects:
+            db.add(GroupMemberDB(group_id=group.id, user_id=user_obj.uid))
+            db.flush()
         db.commit()
         logger.info(f"[create_group] Group created: id={group.id}, name={group.name}")
         return {"group_id": group.id, "name": group.name}
@@ -68,12 +82,14 @@ def add_member_to_group(
     """Add a new member to an existing group. If user does not exist, send invite email."""
     logger.info(f"[add_member_to_group] Add member to group {group_id} with email {email}")
     try:
+        if not is_valid_email(email):
+            raise HTTPException(status_code=400, detail="Invalid email address")
         user = db.query(UserDB).filter(UserDB.email == email).first()
         if not user:
             group = db.query(GroupDB).filter(GroupDB.id == group_id).first()
             group_name = group.name if group else None
             invite_link = f"{settings.WEBSITE_URL}/invite?group_id={group_id}&email={email}"
-            send_invite_email_background(background_tasks, email, invite_link, group_name)
+            send_invite_email_background(background_tasks, email, invite_link, logger, group_name)
             logger.info(f"[add_member_to_group] Invite sent to {email} for group {group_id}")
             return {"message": f"Invite sent to {email}."}
         exists = db.query(GroupMemberDB).filter_by(group_id=group_id, user_id=user.uid).first()
@@ -87,3 +103,29 @@ def add_member_to_group(
     except Exception as e:
         logger.error(f"[add_member_to_group] Error: {e}")
         raise
+
+
+@router.get("/groups/{group_id}/members")
+def get_group_members(
+    group_id: int,
+    db: Session = Depends(get_db)
+):
+    """Get all members of a group as user dicts."""
+    group = db.query(GroupDB).filter(GroupDB.id == group_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+    members = (
+        db.query(UserDB)
+        .join(GroupMemberDB, GroupMemberDB.user_id == UserDB.uid)
+        .filter(GroupMemberDB.group_id == group_id)
+        .all()
+    )
+    return [
+        {
+            "uid": user.uid,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+        }
+        for user in members
+    ]

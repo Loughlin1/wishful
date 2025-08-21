@@ -1,7 +1,18 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text
+
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, Table
 from sqlalchemy.orm import relationship, declarative_base
 
+
 Base = declarative_base()
+
+# Association table for wishlists shared with users
+wishlist_shared_with = Table(
+    'shared_with',
+    Base.metadata,
+    Column('wishlist_id', Integer, ForeignKey('wishlists.id'), primary_key=True),
+    Column('user_id', String, ForeignKey('users.uid'), primary_key=True)
+)
+
 
 class UserDB(Base):
     __tablename__ = 'users'
@@ -10,6 +21,12 @@ class UserDB(Base):
     last_name = Column(String)
     email = Column(String, unique=True, index=True)
     wishlists = relationship('WishListDB', back_populates='owner_user')
+    shared_wishlists = relationship(
+        'WishListDB',
+        secondary=wishlist_shared_with,
+        back_populates='shared_with'
+    )
+
 
 class WishListDB(Base):
     __tablename__ = 'wishlists'
@@ -18,7 +35,11 @@ class WishListDB(Base):
     name = Column(String, unique=True, nullable=False)
     tag = Column(String)
     items = relationship('WishItemDB', back_populates='wishlist', cascade='all, delete-orphan')
-    shared_with = relationship('SharedWithDB', back_populates='wishlist', cascade='all, delete-orphan')
+    shared_with = relationship(
+        'UserDB',
+        secondary=wishlist_shared_with,
+        back_populates='shared_wishlists'
+    )
     owner_user = relationship('UserDB', back_populates='wishlists')
 
 class WishItemDB(Base):
@@ -31,11 +52,8 @@ class WishItemDB(Base):
     link = Column(String, nullable=True)
     wishlist = relationship('WishListDB', back_populates='items')
 
-class SharedWithDB(Base):
-    __tablename__ = 'shared_with'
-    wishlist_id = Column(Integer, ForeignKey('wishlists.id'), primary_key=True)
-    user_id = Column(String, primary_key=True)
-    wishlist = relationship('WishListDB', back_populates='shared_with')
+
+# Removed SharedWithDB mapped class; now using association table for many-to-many
 
 class GroupDB(Base):
     __tablename__ = 'groups'

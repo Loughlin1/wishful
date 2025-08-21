@@ -247,25 +247,35 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
               // Title row above the items
               Padding(
                 padding: const EdgeInsets.only(top: 24.0, bottom: 8.0),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        widget.wishList.name,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.wishList.name,
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
+                        if (isOwner)
+                          IconButton(
+                            icon: const Icon(Icons.share, color: Colors.green),
+                            tooltip: 'Share Wishlist',
+                            onPressed: _showShareDialog,
+                            padding: const EdgeInsets.only(left: 0, right: 0),
+                            constraints: BoxConstraints(),
+                          ),
+                      ],
                     ),
-                    if (isOwner)
-                      IconButton(
-                        icon: const Icon(Icons.share, color: Colors.black),
-                        tooltip: 'Share Wishlist',
-                        onPressed: _showShareDialog,
-                        padding: const EdgeInsets.only(left: 0, right: 0),
-                        constraints: BoxConstraints(),
-                      ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Owner: ${widget.wishList.ownerFirstName} ${widget.wishList.ownerLastName}',
+                      style: const TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
                   ],
                 ),
               ),

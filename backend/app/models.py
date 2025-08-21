@@ -21,6 +21,8 @@ class WishListRequest(BaseModel):
     id: int
     name: str
     owner_id: str
+    owner_first_name: str
+    owner_last_name: str
     items: List[WishItemRequest]
     shared_with: Optional[List[str]] = []
     tag: Optional[TagEnum] = None
@@ -36,3 +38,9 @@ class UserRequest(BaseModel):
 
 class EmailRequest(BaseModel):
     email: str
+
+
+class CreateGroupRequest(BaseModel):
+    name: str
+    users: list[str]
+

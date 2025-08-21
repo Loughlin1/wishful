@@ -9,7 +9,7 @@ from ..models import EmailRequest
 from ..db.models import SharedWithGroupDB, UserDB, WishListDB
 from ..db.crud import get_wishlist_by_id, share_wishlist_with_user
 from ..db.database import SessionLocal
-from ..utils.email_utils import send_invite_email_background, send_shared_email_background
+from ..utils.email_utils import send_invite_email_background, send_shared_email_background, is_valid_email
 from ..config import settings
 
 router = APIRouter()
@@ -62,6 +62,8 @@ def share_wishlist_with_user(
     logger.info(f"[share_wishlist] User {current_user['uid']} generating share link for wishlist {wishlist_id}")
     try:
         email = request.email
+        if not is_valid_email(email):
+            raise HTTPException(status_code=400, detail="Invalid email address")
         user_to_add = db.query(UserDB).filter(UserDB.email == email).first()
         current_user = db.query(UserDB).filter(UserDB.uid == current_user['uid']).first()
 
@@ -79,9 +81,10 @@ def share_wishlist_with_user(
             # Send notification email
             send_shared_email_background(
                 background_tasks,
-                user_to_add.first_name + user_to_add.last_name,
+                f"{user_to_add.first_name} {user_to_add.last_name}",
                 user_to_add.email,
-                current_user.first_name + current_user.last_name,
+                f"{current_user.first_name} {current_user.last_name}",
+                logger=logger
             )
             return {"message": "Wishlist shared and email sent."}
         else:
@@ -89,7 +92,7 @@ def share_wishlist_with_user(
             share_tokens[token] = (wishlist_id, current_user.uid)
             invite_link = f"{settings.WEBSITE_URL}/share/{token}"
             logger.info(f"[share_wishlist] Share link generated for wishlist {wishlist_id} by user {current_user.uid}")
-            send_invite_email_background(background_tasks, email, invite_link)
+            send_invite_email_background(background_tasks, email, invite_link, logger)
             logger.info(f"[share_wishlist] Invite sent to {email} for wishlist {wishlist_id}")
             return {"message": f"Invite sent to {email}."}
     except Exception as e:

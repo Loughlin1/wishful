@@ -71,12 +71,12 @@ class WishListService {
   }
 
   // Create a group
-  Future<Map<String, dynamic>> createGroup(String name) async {
+  Future<Map<String, dynamic>> createGroup(String name, List users) async {
     final headers = await _getAuthHeaders(json: true);
     final response = await http.post(
       Uri.parse('$baseUrl/groups'),
       headers: headers,
-      body: jsonEncode({'name': name}),
+      body: jsonEncode({'name': name, 'users': users}),
     );
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
@@ -258,6 +258,21 @@ class WishListService {
       return data.map((json) => GroupSearchResult.fromJson(json)).toList();
     } else {
       throw Exception('Failed to search groups');
+    }
+  }
+
+  // Fetch members of a group
+  Future<List<UserSearchResult>> getGroupMembers(int groupId) async {
+    final headers = await _getAuthHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/groups/$groupId/members'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body) as List;
+      return data.map((json) => UserSearchResult.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to fetch group members');
     }
   }
 }

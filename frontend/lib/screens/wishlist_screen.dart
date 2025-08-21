@@ -5,6 +5,7 @@ import '../models/wish_list.dart';
 import 'wishlist_details_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/invite_user_dialog.dart';
+import '../widgets/share_dialog.dart';
 
 
 class WishListScreen extends StatefulWidget {
@@ -82,10 +83,20 @@ class _WishListScreenState extends State<WishListScreen> {
                     ),
                   ...myWishlists.map((wishList) => ListTile(
                     title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        Expanded(
+                          child: Text(
+                            wishList.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         Text(
                           _ownerFullName(wishList),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          overflow: TextOverflow.ellipsis,
                         ),
                         if (wishList.tag != null && wishList.tag!.isNotEmpty) ...[
                           const SizedBox(width: 8),
@@ -107,6 +118,16 @@ class _WishListScreenState extends State<WishListScreen> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        IconButton(
+                          icon: const Icon(Icons.share, color: Colors.green),
+                          tooltip: 'Share',
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => ShareDialog(wishListId: wishList.id),
+                            );
+                          },
+                        ),
                         IconButton(
                           icon: const Icon(Icons.edit, color: Colors.blue),
                           tooltip: 'Edit Name',

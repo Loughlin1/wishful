@@ -7,7 +7,7 @@ LOG_PATH = os.path.abspath(os.path.join(LOG_DIR, 'wishful_backend.log'))
 os.makedirs(LOG_DIR, exist_ok=True)
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s %(levelname)s %(name)s %(message)s',
     handlers=[
         logging.FileHandler(LOG_PATH),

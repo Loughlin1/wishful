@@ -31,35 +31,38 @@ class WishfulAppBar extends StatelessWidget implements PreferredSizeWidget {
               )
             : Row(
                 children: [
-                  PopupMenuButton<String>(
-                    icon: const Icon(Icons.account_circle, color: Colors.black),
-                    onSelected: (value) async {
-                      if (value == 'invite') {
-                        showDialog(
-                          context: context,
-                          builder: (context) => const InviteUserDialog(),
-                        );
-                      } else if (value == 'logout') {
-                        await FirebaseAuth.instance.signOut();
-                        if (context.mounted) context.go('/');
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem<String>(
-                        value: 'invite',
-                        child: ListTile(
-                          leading: Icon(Icons.mail_outline),
-                          title: Text('Invite'),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 24.0),
+                    child: PopupMenuButton<String>(
+                      icon: const Icon(Icons.account_circle, color: Colors.black, size: 36),
+                      onSelected: (value) async {
+                        if (value == 'invite') {
+                          showDialog(
+                            context: context,
+                            builder: (context) => const InviteUserDialog(),
+                          );
+                        } else if (value == 'logout') {
+                          await FirebaseAuth.instance.signOut();
+                          if (context.mounted) context.go('/');
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem<String>(
+                          value: 'invite',
+                          child: ListTile(
+                            leading: Icon(Icons.mail_outline),
+                            title: Text('Invite'),
+                          ),
                         ),
-                      ),
-                      const PopupMenuItem<String>(
-                        value: 'logout',
-                        child: ListTile(
-                          leading: Icon(Icons.logout),
-                          title: Text('Logout'),
+                        const PopupMenuItem<String>(
+                          value: 'logout',
+                          child: ListTile(
+                            leading: Icon(Icons.logout),
+                            title: Text('Logout'),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),

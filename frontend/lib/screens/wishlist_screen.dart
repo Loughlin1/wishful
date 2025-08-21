@@ -64,7 +64,7 @@ class _WishListScreenState extends State<WishListScreen> {
           return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 600),
+              constraints: const BoxConstraints(maxWidth: 768),
               child: ListView(
                 children: [
                   const Padding(

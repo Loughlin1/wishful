@@ -249,7 +249,7 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
       body: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 500),
+          constraints: const BoxConstraints(maxWidth: 768),
           child: Column(
             children: [
               // Title row above the items

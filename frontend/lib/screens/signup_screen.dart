@@ -1,8 +1,8 @@
-import 'wishful_app_bar.dart';
+import '../widgets/wishful_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'services.dart';
+import '../../services/services.dart';
 import 'package:go_router/go_router.dart';
 
 

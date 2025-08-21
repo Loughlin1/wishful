@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'services.dart';
+import '../services/services.dart';
+import '../widgets/wishful_app_bar.dart';
+import '../models/wish_list.dart';
 import 'wishlist_details_screen.dart';
-import 'models.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:go_router/go_router.dart';
-import 'wishful_app_bar.dart';
+import '../widgets/invite_user_dialog.dart';
+
 
 class WishListScreen extends StatefulWidget {
   const WishListScreen({super.key});
@@ -62,7 +63,7 @@ class _WishListScreenState extends State<WishListScreen> {
           return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 500),
+              constraints: const BoxConstraints(maxWidth: 600),
               child: ListView(
                 children: [
                   const Padding(
@@ -180,7 +181,10 @@ class _WishListScreenState extends State<WishListScreen> {
                           const SizedBox(height: 8),
                           ElevatedButton(
                             onPressed: () {
-                              // You can add invite logic here
+                              showDialog(
+                                context: context,
+                                builder: (context) => const InviteUserDialog(),
+                              );
                             },
                             child: const Text('Invite family and friends to create a wishlist.'),
                           ),

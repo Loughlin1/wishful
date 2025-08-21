@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
-import 'wishlist_screen.dart';
-import 'login_screen.dart';
-import 'signup_screen.dart';
-import 'invite_landing_page.dart';
-import 'welcome_screen.dart';
+import 'screens/wishlist_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/signup_screen.dart';
+import 'screens/invite_landing_page.dart';
+import 'screens/welcome_screen.dart';
 import 'firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';

@@ -29,6 +29,19 @@ def send_invite_email_background(background_tasks: BackgroundTasks, to_email: st
     background_tasks.add_task(send_email, to_email, subject, body)
 
 
+def send_shared_email_background(
+    background_tasks: BackgroundTasks,
+    to_user_name: str,
+    to_user_email: str,
+    from_user_name: str,
+):
+    from .logger import logger
+    logger.info(f"[send_shared_email_background] Scheduling share email to {to_user_email} from {from_user_name}.")
+    subject = f"{from_user_name} has shared their wishlist with you!"
+    body = f"Hi {to_user_name},\n\n{from_user_name} has shared their wishlist with you on Wishful!"
+    background_tasks.add_task(send_email, to_user_email, subject, body)
+
+
 def send_email(to_email: str, subject: str, body: str):
     from .logger import logger
     logger.info(f"[send_email] Sending email to {to_email} with subject '{subject}'")

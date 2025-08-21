@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'services.dart';
+import '../services/services.dart';
 import 'package:go_router/go_router.dart';
 
 class InviteLandingPage extends StatefulWidget {

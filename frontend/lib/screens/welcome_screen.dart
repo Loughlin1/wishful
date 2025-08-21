@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'wishful_app_bar.dart';
+import '../widgets/wishful_app_bar.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});

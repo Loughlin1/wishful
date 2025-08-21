@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'services.dart';
-import 'models.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'wishful_app_bar.dart';
+import '../services/services.dart';
+import '../models/wish_list.dart';
+import '../models/wish_item.dart';
+import '../widgets/wishful_app_bar.dart';
+import '../widgets/share_dialog.dart';
 
 
 class WishListDetailsScreen extends StatefulWidget {
@@ -16,51 +18,10 @@ class WishListDetailsScreen extends StatefulWidget {
 
 class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
   void _showShareDialog() {
-    final TextEditingController emailController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Share Wishlist'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(hintText: 'Enter email to share with'),
-              ),
-              // You can add group sharing UI here if needed
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final email = emailController.text.trim();
-                if (email.isNotEmpty) {
-                  try {
-                    // final link = await WishListService().shareWishlistByEmail(widget.wishList.id, email);
-                    if (!mounted) return;
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Share link sent to $email')),
-                    );
-                  } catch (e) {
-                    if (!mounted) return;
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to share: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text('Share'),
-            ),
-          ],
-        );
+        return ShareDialog(wishListId: widget.wishList.id);
       },
     );
   }

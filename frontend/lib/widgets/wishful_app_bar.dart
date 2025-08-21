@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-import 'widgets/invite_user_dialog.dart';
+import 'invite_user_dialog.dart';
 
 class WishfulAppBar extends StatelessWidget implements PreferredSizeWidget {
   const WishfulAppBar({super.key});

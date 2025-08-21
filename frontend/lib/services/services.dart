@@ -1,8 +1,9 @@
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'models.dart';
+import '../models/wish_list.dart';
+import '../models/user_search_result.dart';
+import '../models/group_search_result.dart';
 
 class WishListService {
   static const String baseUrl = 'http://localhost:8000';
@@ -227,6 +228,36 @@ class WishListService {
     );
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to add item to wish list');
+    }
+  }
+
+  // Search users by name or email
+  Future<List<UserSearchResult>> searchUsers(String query) async {
+    final headers = await _getAuthHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/search?q=${Uri.encodeComponent(query)}'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => UserSearchResult.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to search users');
+    }
+  }
+
+  // Search groups by name
+  Future<List<GroupSearchResult>> searchGroups(String query) async {
+    final headers = await _getAuthHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/groups/search?q=${Uri.encodeComponent(query)}'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => GroupSearchResult.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to search groups');
     }
   }
 }

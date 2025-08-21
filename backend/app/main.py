@@ -5,6 +5,7 @@ from .routes.wishlist_items import router as wishlist_items_router
 from .routes.sharing import router as sharing_router
 from .routes.recommendations import router as recommendations_router
 from .routes.user import router as user_router
+from .routes.groups import router as group_router
 from .db.database import init_db
 
 init_db()
@@ -25,3 +26,4 @@ app.include_router(wishlist_items_router)
 app.include_router(sharing_router)
 app.include_router(recommendations_router)
 app.include_router(user_router)
+app.include_router(group_router)

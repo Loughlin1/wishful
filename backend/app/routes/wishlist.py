@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Request, HTTPException, Body
 from ..utils.logger import logger
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from ..models import WishListRequest, WishItemRequest, TagEnum
+from ..models import WishListRequest, CreateWishListRequest, TagEnum
 from ..auth import verify_token
 from ..db.database import SessionLocal
 from ..db.models import WishListDB, WishItemDB
@@ -46,7 +46,7 @@ def get_wishlists(request: Request, user=Depends(verify_token), db: Session = De
 
 # Create a wishlist (owner only)
 @router.post("/wishlists", response_model=WishListRequest)
-def create_wishlist(wishlist: WishListRequest, request: Request, user=Depends(verify_token), db: Session = Depends(get_db)):
+def create_wishlist(wishlist: CreateWishListRequest, request: Request, user=Depends(verify_token), db: Session = Depends(get_db)):
     logger.info(f"[create_wishlist] User {user['uid']} creating wishlist {wishlist.id}")
     if get_wishlist_by_id(db, wishlist.id):
         raise HTTPException(status_code=400, detail="Wishlist already exists")

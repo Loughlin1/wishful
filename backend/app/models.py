@@ -18,6 +18,15 @@ class WishItemRequest(BaseModel):
     link: Optional[str] = None
 
 
+class CreateWishListRequest(BaseModel):
+    id: int
+    name: str
+    owner_id: str
+    items: List[WishItemRequest]
+    shared_with: Optional[List[str]] = []
+    tag: Optional[TagEnum] = None
+
+
 class WishListRequest(BaseModel):
     id: int
     name: str

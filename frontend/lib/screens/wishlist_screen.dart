@@ -150,13 +150,19 @@ class _WishListScreenState extends State<WishListScreen> {
                       );
                     },
                   )),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                    child: ElevatedButton(
-                      onPressed: _showCreateWishListDialog,
-                      child: const Text('Create Wish List'),
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 300),
+                        child: ElevatedButton(
+                          onPressed: _showCreateWishListDialog,
+                          child: const Text('Create Wish List'),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 48),// Added this for extra space
                   const Padding(
                     padding: EdgeInsets.all(16.0),
                     child: Text('Friends & Family Wishlists', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

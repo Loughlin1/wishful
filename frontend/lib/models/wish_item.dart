@@ -3,6 +3,7 @@ class WishItem {
   final String name;
   final bool reserved;
   final String? reservedBy;
+  final String? reservedByName;
   final String? link;
 
   WishItem({
@@ -10,6 +11,7 @@ class WishItem {
     required this.name,
     this.reserved = false,
     this.reservedBy,
+    this.reservedByName,
     this.link,
   });
 
@@ -18,6 +20,7 @@ class WishItem {
         name: json['name'],
         reserved: json['reserved'] ?? false,
         reservedBy: json['reserved_by'],
+        reservedByName: json['reserved_by_name'],
         link: json['link'],
       );
 

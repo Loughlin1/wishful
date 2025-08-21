@@ -114,7 +114,7 @@ class _WishListScreenState extends State<WishListScreen> {
                         ],
                       ],
                     ),
-                    subtitle: Text('${wishList.items.length} items'),
+                    // subtitle: Text('${wishList.items.length} items'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -164,8 +164,21 @@ class _WishListScreenState extends State<WishListScreen> {
                   if (sharedWishlists.isNotEmpty)
                     ...sharedWishlists.map((wishList) => ListTile(
                       title: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(wishList.name),
+                          Expanded(
+                            child: Text(
+                              wishList.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _ownerFullName(wishList),
+                            style: const TextStyle(fontSize: 14, color: Colors.grey),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           if (wishList.tag != null && wishList.tag!.isNotEmpty) ...[
                             const SizedBox(width: 8),
                             Container(
@@ -182,7 +195,7 @@ class _WishListScreenState extends State<WishListScreen> {
                           ],
                         ],
                       ),
-                      subtitle: Text('${wishList.items.length} items'),
+                      // subtitle: Text('${wishList.items.length} items'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         Navigator.push(

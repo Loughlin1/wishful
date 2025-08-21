@@ -14,6 +14,7 @@ class WishItemRequest(BaseModel):
     name: str
     reserved: bool = False
     reserved_by: Optional[str] = None
+    reserved_by_name: Optional[str] = None
     link: Optional[str] = None
 
 

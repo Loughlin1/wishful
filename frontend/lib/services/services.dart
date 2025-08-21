@@ -2,12 +2,23 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/wish_list.dart';
+import '../models/wish_item.dart';
 import '../models/user_search_result.dart';
 import '../models/group_search_result.dart';
 
 class WishListService {
   static const String baseUrl = 'http://localhost:8000';
 
+  Future<List<WishItem>> fetchWishListItems(int wishlistId) async {
+    final headers = await _getAuthHeaders();
+    final response = await http.get(Uri.parse('$baseUrl/wishlists/$wishlistId/items'), headers: headers);
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => WishItem.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load wish list items');
+    }
+  }
 
   Future<bool> registerUser({
     required String uid,

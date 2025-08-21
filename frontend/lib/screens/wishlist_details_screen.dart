@@ -33,11 +33,29 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    items = widget.wishList.items;
+    items = [];
     ownerId = widget.wishList.ownerId;
     sharedWith = widget.wishList.sharedWith;
     currentUserId = null;
     _getCurrentUserId();
+    _fetchItems();
+  }
+
+  void _fetchItems() async {
+    try {
+      final fetchedItems = await WishListService().fetchWishListItems(widget.wishList.id);
+      if (mounted) {
+        setState(() {
+          items = fetchedItems;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load items: $e')),
+        );
+      }
+    }
   }
 
   void _getCurrentUserId() {
@@ -106,6 +124,7 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
               name: newName,
               reserved: item.reserved,
               reservedBy: item.reservedBy,
+              reservedByName: item.reservedByName,
               link: link.isNotEmpty ? link : null,
             );
           }
@@ -140,23 +159,12 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
     try {
       final reservedBy = currentUserId ?? 'User';
       await WishListService().reserveGift(widget.wishList.id, itemId, reservedBy);
-      setState(() {
-        items = items.map((item) {
-          if (item.id == itemId) {
-            return WishItem(
-              id: item.id,
-              name: item.name,
-              reserved: true,
-              reservedBy: reservedBy,
-            );
-          }
-          return item;
-        }).toList();
-      });
+      // Always refresh items from backend to get the true state (reserved or unreserved)
+      _fetchItems();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to reserve gift: $e')),
+          SnackBar(content: Text('Failed to reserve/unreserve gift: $e')),
         );
       }
     }
@@ -329,9 +337,10 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
-                                  item.reserved
-                                      ? Text('Reserved by ${item.reservedBy ?? 'someone'}', style: const TextStyle(color: Colors.red))
-                                      : const Text('Available'),
+                                  if (item.reserved && currentUserId != ownerId)
+                                    Text('Reserved by ${item.reservedByName ?? 'someone'}', style: const TextStyle(color: Colors.red))
+                                  else if (!item.reserved && currentUserId != ownerId)
+                                    const Text('Available'),
                                 ],
                               ),
                               trailing: Row(
@@ -353,6 +362,13 @@ class _WishListDetailsScreenState extends State<WishListDetailsScreen> {
                                     ElevatedButton(
                                       onPressed: () => _reserveGift(item.id),
                                       child: const Text('Reserve'),
+                                    ),
+                                  ]
+                                  else if (item.reserved && item.reservedBy == currentUserId) ...[
+                                    ElevatedButton(
+                                      onPressed: () => _reserveGift(item.id), // same function toggles reserve/unreserve
+                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                                      child: const Text('Unreserve'),
                                     ),
                                   ]
                                   else if (item.reserved) ...[

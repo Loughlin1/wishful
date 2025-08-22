@@ -17,6 +17,24 @@ class ShareDialog extends StatefulWidget {
 class _ShareDialogState extends State<ShareDialog> {
   final TextEditingController _searchController = TextEditingController();
   List<UserSearchResult> _results = [];
+  List<String> _sharedWith = []; // List of emails the wishlist is shared with
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _fetchSharedUsers();
+  }
+
+  Future<void> _fetchSharedUsers() async {
+    try {
+      final shared = await WishListService().getSharedUserEmails(widget.wishListId);
+      if (!mounted) return;
+      setState(() {
+        _sharedWith = shared;
+      });
+    } catch (e) {
+      // Optionally handle error
+    }
+  }
   List<GroupSearchResult> _groupResults = [];
   bool _isLoading = false;
   String _error = '';
@@ -112,15 +130,34 @@ class _ShareDialogState extends State<ShareDialog> {
     try {
       await WishListService().shareWishlistByEmail(widget.wishListId, email);
       if (!mounted) return;
-      Navigator.of(context).pop();
+      setState(() {
+        _sharedWith.add(email);
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Share link sent to $email')),
       );
     } catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to share: $e')),
+      );
+    }
+  }
+
+  Future<void> _unshareWithUser(String email) async {
+    try {
+      await WishListService().unshareWishlistByEmail(widget.wishListId, email);
+      if (!mounted) return;
+      setState(() {
+        _sharedWith.remove(email);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unshared with $email')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to unshare: $e')),
       );
     }
   }
@@ -220,14 +257,24 @@ class _ShareDialogState extends State<ShareDialog> {
                                 );
                               }
                               final item = _results[resultIndex];
+                              final isShared = _sharedWith.contains(item.email);
                               return ListTile(
                                 leading: const Icon(Icons.person),
                                 title: Text('${item.firstName} ${item.lastName}'),
                                 subtitle: Text(item.email),
-                                trailing: ElevatedButton(
-                                  onPressed: () => _shareWithUser(item.email),
-                                  child: const Text('Share'),
-                                ),
+                                trailing: isShared
+                                    ? ElevatedButton(
+                                        onPressed: () => _unshareWithUser(item.email),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.grey[300],
+                                          foregroundColor: Colors.black,
+                                        ),
+                                        child: const Text('Shared'),
+                                      )
+                                    : ElevatedButton(
+                                        onPressed: () => _shareWithUser(item.email),
+                                        child: const Text('Share'),
+                                      ),
                               );
                             },
                           ),

@@ -76,3 +76,18 @@ def get_shared_wishlists_for_user(db: Session, user_id: str):
         ))
     return result
 
+def get_shared_user_emails_for_wishlist(db: Session, wishlist_id: int) -> list[str]:
+    wishlist = db.query(WishListDB).filter(WishListDB.id == wishlist_id).first()
+    if not wishlist:
+        return []
+    return [user.email for user in wishlist.shared_with]
+
+
+def unshare_wishlist_with_user(db: Session, wishlist_id: int, email: str):
+    wishlist = db.query(WishListDB).filter(WishListDB.id == wishlist_id).first()
+    user = db.query(UserDB).filter(UserDB.email == email).first()
+    if wishlist and user and user in wishlist.shared_with:
+        wishlist.shared_with.remove(user)
+        db.commit()
+    return wishlist
+

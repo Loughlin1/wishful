@@ -9,6 +9,35 @@ import '../models/group_search_result.dart';
 class WishListService {
   static const String baseUrl = 'http://localhost:8000';
 
+  /// Returns a list of emails the wishlist is currently shared with
+  Future<List<String>> getSharedUserEmails(int wishlistId) async {
+    final headers = await _getAuthHeaders();
+    final response = await http.get(
+      Uri.parse('$baseUrl/wishlists/$wishlistId/shared-users'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<String>();
+    } else {
+      throw Exception('Failed to fetch shared users');
+    }
+  }
+
+  /// Unshares the wishlist with a specific user by email
+  Future<void> unshareWishlistByEmail(int wishlistId, String email) async {
+    final headers = await _getAuthHeaders(json: true);
+    final response = await http.post(
+      Uri.parse('$baseUrl/wishlists/$wishlistId/unshare'),
+      headers: headers,
+      body: jsonEncode({'email': email}),
+    );
+    if (response.statusCode != 200) {
+      final error = jsonDecode(response.body)['detail'];
+      throw Exception('Failed to unshare wishlist: $error');
+    }
+  }
+
   Future<List<WishItem>> fetchWishListItems(int wishlistId) async {
     final headers = await _getAuthHeaders();
     final response = await http.get(Uri.parse('$baseUrl/wishlists/$wishlistId/items'), headers: headers);

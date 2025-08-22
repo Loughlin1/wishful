@@ -162,3 +162,41 @@ def accept_invite_after_signup(token: str, user_id: str = Body(...), db: Session
     del share_tokens[token]
     return {"message": "You now have access to the shared wishlist!"}
 
+
+@router.get("/wishlists/{wishlist_id}/shared-users")
+def get_shared_users(
+    wishlist_id: int,
+    user=Depends(verify_token),
+    db: Session = Depends(get_db),
+):
+    """Return a list of emails the wishlist is shared with."""
+    wishlist = db.query(WishListDB).filter(WishListDB.id == wishlist_id).first()
+    if not wishlist:
+        raise HTTPException(status_code=404, detail="Wishlist not found")
+    # Only owner can see shared users
+    if wishlist.owner_id != user["uid"]:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    from ..db.crud import get_shared_user_emails_for_wishlist
+    return get_shared_user_emails_for_wishlist(db, wishlist_id)
+
+
+@router.post("/wishlists/{wishlist_id}/unshare")
+def unshare_wishlist_with_user_endpoint(
+    wishlist_id: int,
+    payload: dict = Body(...),
+    user=Depends(verify_token),
+    db: Session = Depends(get_db),
+):
+    """Unshare a wishlist with a user by email."""
+    email = payload.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email required")
+    wishlist = db.query(WishListDB).filter(WishListDB.id == wishlist_id).first()
+    if not wishlist:
+        raise HTTPException(status_code=404, detail="Wishlist not found")
+    # Only owner can unshare
+    if wishlist.owner_id != user["uid"]:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    from ..db.crud import unshare_wishlist_with_user
+    unshare_wishlist_with_user(db, wishlist_id, email)
+    return {"message": f"Unshared with {email}"}

@@ -6,6 +6,7 @@ import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
 import 'screens/invite_landing_page.dart';
 import 'screens/welcome_screen.dart';
+import 'screens/user_profile_page.dart';
 import 'firebase_options.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -44,6 +45,10 @@ final GoRouter _router = GoRouter(
         final inviteCode = state.pathParameters['inviteCode']!;
         return InviteLandingPage(inviteCode: inviteCode);
       },
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const UserProfilePage(),
     ),
   ],
   initialLocation: '/',

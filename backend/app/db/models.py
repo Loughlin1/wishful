@@ -14,6 +14,26 @@ wishlist_shared_with = Table(
 )
 
 
+
+class UserProfileDB(Base):
+    __tablename__ = 'user_profiles'
+    uid = Column(String, ForeignKey('users.uid'), primary_key=True)
+    tshirt_size = Column(String, nullable=True)
+    shoe_size = Column(String, nullable=True)
+    pants_jeans_size = Column(String, nullable=True)
+    dress_size = Column(String, nullable=True)
+    shirt_size = Column(String, nullable=True)
+    jacket_size = Column(String, nullable=True)
+    hat_size = Column(String, nullable=True)
+    glove_size = Column(String, nullable=True)
+    belt_size = Column(String, nullable=True)
+    bra_size = Column(String, nullable=True)
+    ring_size = Column(String, nullable=True)
+    sock_size = Column(String, nullable=True)
+    height = Column(String, nullable=True)
+    notes = Column(String, nullable=True)
+    interests = Column(String, nullable=True)  # store as comma-separated string
+
 class UserDB(Base):
     __tablename__ = 'users'
     uid = Column(String, primary_key=True, index=True)

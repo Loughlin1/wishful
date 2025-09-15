@@ -10,17 +10,21 @@ class WishfulAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     return AppBar(
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            backgroundImage: AssetImage('web/icons/wishful_icon.jpg'),
-            radius: 20,
-            backgroundColor: Colors.transparent,
-          ),
-          const SizedBox(width: 12),
-          const Text('Wishful'),
-        ],
+      title: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => context.go('/wishlists'),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              backgroundImage: AssetImage('web/icons/wishful_icon.jpg'),
+              radius: 20,
+              backgroundColor: Colors.transparent,
+            ),
+            const SizedBox(width: 12),
+            const Text('Wishful'),
+          ],
+        ),
       ),
       actions: [
         user == null
@@ -31,6 +35,13 @@ class WishfulAppBar extends StatelessWidget implements PreferredSizeWidget {
               )
             : Row(
                 children: [
+                  IconButton(
+                    icon: const Icon(Icons.person, color: Colors.black),
+                    tooltip: 'Profile',
+                    onPressed: () {
+                      context.go('/profile');
+                    },
+                  ),
                   TextButton.icon(
                     onPressed: () async {
                       await FirebaseAuth.instance.signOut();

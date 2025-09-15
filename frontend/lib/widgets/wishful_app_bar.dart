@@ -31,39 +31,25 @@ class WishfulAppBar extends StatelessWidget implements PreferredSizeWidget {
               )
             : Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(right: 24.0),
-                    child: PopupMenuButton<String>(
-                      icon: const Icon(Icons.account_circle, color: Colors.black, size: 36),
-                      onSelected: (value) async {
-                        if (value == 'invite') {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const InviteUserDialog(),
-                          );
-                        } else if (value == 'logout') {
-                          await FirebaseAuth.instance.signOut();
-                          if (context.mounted) context.go('/');
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        const PopupMenuItem<String>(
-                          value: 'invite',
-                          child: ListTile(
-                            leading: Icon(Icons.mail_outline),
-                            title: Text('Invite'),
-                          ),
-                        ),
-                        const PopupMenuItem<String>(
-                          value: 'logout',
-                          child: ListTile(
-                            leading: Icon(Icons.logout),
-                            title: Text('Logout'),
-                          ),
-                        ),
-                      ],
-                    ),
+                  TextButton.icon(
+                    onPressed: () async {
+                      await FirebaseAuth.instance.signOut();
+                      if (context.mounted) context.go('/');
+                    },
+                    icon: const Icon(Icons.logout, color: Colors.black),
+                    label: const Text('Logout', style: TextStyle(color: Colors.black)),
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.mail_outline, color: Colors.black),
+                    tooltip: 'Invite',
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => const InviteUserDialog(),
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 12),
                 ],
               ),
       ],

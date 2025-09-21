@@ -43,6 +43,7 @@ def create_user_profile(db: Session, profile: UserProfileCreate):
         height=profile.height,
         notes=profile.notes,
         interests=','.join(profile.interests) if profile.interests else None,
+        date_of_birth=profile.date_of_birth,
     )
     db.add(db_profile)
     db.commit()

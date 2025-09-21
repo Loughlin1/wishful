@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
-import '../services/user_profile_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/user_profile_api_service.dart';
 import '../widgets/wishful_app_bar.dart';
 
 class UserProfilePage extends StatefulWidget {
@@ -49,7 +50,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
   final _sockController = TextEditingController();
   final _heightController = TextEditingController();
   final _notesController = TextEditingController();
-  final _service = UserProfileService();
+  DateTime? _selectedDateOfBirth;
+  final _apiService = UserProfileApiService(baseUrl: 'http://localhost:8000'); // Update baseUrl as needed
   bool _loading = true;
   String _shoeSizeType = 'UK';
 
@@ -60,7 +62,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Future<void> _loadProfile() async {
-    final profile = await _service.loadProfile();
+    final user = await _getCurrentUser();
+    if (user == null) {
+      setState(() => _loading = false);
+      return;
+    }
+    final profile = await _apiService.fetchProfile(user.uid);
     if (profile != null) {
       _tshirtController.text = profile.tshirtSize ?? '';
       // Try to parse shoe size type from saved value, fallback to UK
@@ -85,12 +92,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
       _heightController.text = profile.height ?? '';
       _notesController.text = profile.notes ?? '';
       _selectedInterests = profile.interests ?? [];
+      if (profile.dateOfBirth != null && profile.dateOfBirth!.isNotEmpty) {
+        _selectedDateOfBirth = DateTime.tryParse(profile.dateOfBirth!);
+      }
     }
     setState(() => _loading = false);
   }
 
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
+      final user = await _getCurrentUser();
+      if (user == null) return;
       final profile = UserProfile(
         tshirtSize: _tshirtController.text,
         shoeSize: '${_shoeSizeType}: ${_shoeController.text}',
@@ -107,12 +119,23 @@ class _UserProfilePageState extends State<UserProfilePage> {
         height: _heightController.text,
         notes: _notesController.text,
         interests: _selectedInterests,
+        dateOfBirth: _selectedDateOfBirth != null ? _selectedDateOfBirth!.toIso8601String().substring(0, 10) : null,
       );
-      await _service.saveProfile(profile);
+      // Try update, if not found, create
+      try {
+        await _apiService.updateProfile(profile, user.uid);
+      } catch (e) {
+        await _apiService.createProfile(profile, user.uid);
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profile saved!')),
       );
     }
+  }
+  Future<dynamic> _getCurrentUser() async {
+    // Import FirebaseAuth at the top if not already
+    // import 'package:firebase_auth/firebase_auth.dart';
+    return Future.value(FirebaseAuth.instance.currentUser);
   }
 
   @override
@@ -368,6 +391,43 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           child: Text('Other', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                         ),
                       ),
+                      // Date of Birth field
+                      Row(
+                        children: [
+                          const Text('Date of Birth:', style: TextStyle(fontSize: 16)),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _selectedDateOfBirth ?? DateTime(2000, 1, 1),
+                                  firstDate: DateTime(1900),
+                                  lastDate: DateTime.now(),
+                                );
+                                if (picked != null) {
+                                  setState(() {
+                                    _selectedDateOfBirth = picked;
+                                  });
+                                }
+                              },
+                              child: InputDecorator(
+                                decoration: const InputDecoration(
+                                  labelText: 'Date of Birth',
+                                  border: OutlineInputBorder(),
+                                ),
+                                child: Text(
+                                  _selectedDateOfBirth != null
+                                      ? '${_selectedDateOfBirth!.year}-${_selectedDateOfBirth!.month.toString().padLeft(2, '0')}-${_selectedDateOfBirth!.day.toString().padLeft(2, '0')}'
+                                      : 'Select date',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _heightController,
                         decoration: const InputDecoration(

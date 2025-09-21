@@ -14,6 +14,7 @@ class UserProfile {
   String? height;
   String? notes;
   List<String>? interests;
+  String? dateOfBirth;
 
   UserProfile({
     this.tshirtSize,
@@ -31,6 +32,7 @@ class UserProfile {
     this.height,
     this.notes,
     this.interests,
+    this.dateOfBirth,
   });
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
@@ -50,6 +52,7 @@ class UserProfile {
       height: map['height'] as String?,
       notes: map['notes'] as String?,
       interests: map['interests'] != null ? List<String>.from(map['interests']) : null,
+      dateOfBirth: map['dateOfBirth'] as String? ?? map['date_of_birth'] as String?,
     );
   }
 
@@ -70,6 +73,7 @@ class UserProfile {
       'height': height,
       'notes': notes,
       'interests': interests,
+      'dateOfBirth': dateOfBirth,
     };
   }
 }

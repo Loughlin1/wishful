@@ -17,6 +17,7 @@ class UserProfileBase(BaseModel):
     height: Optional[str] = None
     notes: Optional[str] = None
     interests: Optional[List[str]] = None
+    date_of_birth: Optional[str] = None  # ISO format string
 
 class UserProfileCreate(UserProfileBase):
     uid: str

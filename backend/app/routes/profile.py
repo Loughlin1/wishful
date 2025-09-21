@@ -19,10 +19,11 @@ def create_profile(profile: UserProfileCreate, db: Session = Depends(get_db)):
     if get_user_profile(db, profile.uid):
         raise HTTPException(status_code=400, detail="Profile already exists")
     db_profile = create_user_profile(db, profile)
-    interests_val = db_profile.__dict__.get('interests')
+    profile_dict = dict(db_profile.__dict__)
+    interests_val = profile_dict.pop('interests', None)
     return UserProfileInDB(
-        **db_profile.__dict__,
-        interests=interests_val.split(',') if interests_val else []
+        **profile_dict,
+        interests=interests_val.split(',') if interests_val else [],
     )
 
 @router.put("/profile/{uid}", response_model=UserProfileInDB)
@@ -30,8 +31,21 @@ def update_profile(uid: str, profile: UserProfileUpdate, db: Session = Depends(g
     db_profile = update_user_profile(db, uid, profile)
     if not db_profile:
         raise HTTPException(status_code=404, detail="Profile not found")
-    interests_val = db_profile.__dict__.get('interests')
+    profile_dict = dict(db_profile.__dict__)
+    interests_val = profile_dict.pop('interests', None)
     return UserProfileInDB(
-        **db_profile.__dict__,
-        interests=interests_val.split(',') if interests_val else []
+        **profile_dict,
+        interests=interests_val.split(',') if interests_val else [],
+    )
+
+@router.get("/profile/{uid}", response_model=UserProfileInDB)
+def get_profile(uid: str, db: Session = Depends(get_db)):
+    db_profile = get_user_profile(db, uid)
+    if not db_profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    profile_dict = dict(db_profile.__dict__)
+    interests_val = profile_dict.pop('interests', None)
+    return UserProfileInDB(
+        **profile_dict,
+        interests=interests_val.split(',') if interests_val else [],
     )

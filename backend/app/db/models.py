@@ -33,6 +33,7 @@ class UserProfileDB(Base):
     height = Column(String, nullable=True)
     notes = Column(String, nullable=True)
     interests = Column(String, nullable=True)  # store as comma-separated string
+    date_of_birth = Column(String, nullable=True)  # ISO format string
 
 class UserDB(Base):
     __tablename__ = 'users'

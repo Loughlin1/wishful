@@ -6,6 +6,7 @@ from .routes.sharing import router as sharing_router
 from .routes.recommendations import router as recommendations_router
 from .routes.user import router as user_router
 from .routes.groups import router as group_router
+from .routes.profile import router as profile_router
 from .db.database import init_db
 
 init_db()
@@ -27,3 +28,4 @@ app.include_router(sharing_router)
 app.include_router(recommendations_router)
 app.include_router(user_router)
 app.include_router(group_router)
+app.include_router(profile_router)

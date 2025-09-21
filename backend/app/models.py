@@ -2,11 +2,11 @@ from pydantic import BaseModel
 from typing import List, Optional
 from enum import Enum
 
+
 class TagEnum(str, Enum):
     birthday = "Birthday"
     xmas = "Xmas"
     other = "Other"
-
 
 
 class WishItemRequest(BaseModel):

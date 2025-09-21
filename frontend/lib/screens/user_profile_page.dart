@@ -36,6 +36,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
   ];
   List<String> _selectedInterests = [];
   final _formKey = GlobalKey<FormState>();
+    final _firstnameController = TextEditingController();
+    final _lastnameController = TextEditingController();
+    String? _selectedGender;
   final _tshirtController = TextEditingController();
   final _shoeController = TextEditingController();
   final _pantsJeansController = TextEditingController();
@@ -55,6 +58,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
   bool _loading = true;
   String _shoeSizeType = 'UK';
 
+  UserProfile? _profile;
+
   @override
   void initState() {
     super.initState();
@@ -69,6 +74,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
     }
     final profile = await _apiService.fetchProfile(user.uid);
     if (profile != null) {
+      _profile = profile;
+    _firstnameController.text = profile.firstName ?? '';
+    _lastnameController.text = profile.lastName ?? '';
+      _selectedGender = profile.gender;
       _tshirtController.text = profile.tshirtSize ?? '';
       // Try to parse shoe size type from saved value, fallback to UK
       final shoe = profile.shoeSize ?? '';
@@ -77,6 +86,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         _shoeSizeType = match.group(1)!;
         _shoeController.text = match.group(2) ?? '';
       } else {
+        _shoeSizeType = 'UK';
         _shoeController.text = shoe;
       }
       _pantsJeansController.text = profile.pantsJeansSize ?? '';
@@ -91,7 +101,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       _sockController.text = profile.sockSize ?? '';
       _heightController.text = profile.height ?? '';
       _notesController.text = profile.notes ?? '';
-      _selectedInterests = profile.interests ?? [];
+      _selectedInterests = List<String>.from(profile.interests ?? []);
       if (profile.dateOfBirth != null && profile.dateOfBirth!.isNotEmpty) {
         _selectedDateOfBirth = DateTime.tryParse(profile.dateOfBirth!);
       }
@@ -103,24 +113,27 @@ class _UserProfilePageState extends State<UserProfilePage> {
     if (_formKey.currentState!.validate()) {
       final user = await _getCurrentUser();
       if (user == null) return;
-      final profile = UserProfile(
-        tshirtSize: _tshirtController.text,
-        shoeSize: '${_shoeSizeType}: ${_shoeController.text}',
-        pantsJeansSize: _pantsJeansController.text,
-        dressSize: _dressController.text,
-        shirtSize: _shirtController.text,
-        jacketSize: _jacketController.text,
-        hatSize: _hatController.text,
-        gloveSize: _gloveController.text,
-        beltSize: _beltController.text,
-        braSize: _braController.text,
-        ringSize: _ringController.text,
-        sockSize: _sockController.text,
-        height: _heightController.text,
-        notes: _notesController.text,
-        interests: _selectedInterests,
-        dateOfBirth: _selectedDateOfBirth != null ? _selectedDateOfBirth!.toIso8601String().substring(0, 10) : null,
-      );
+        final profile = UserProfile(
+          firstName: _firstnameController.text,
+          lastName: _lastnameController.text,
+           gender: _selectedGender,
+          tshirtSize: _tshirtController.text,
+          shoeSize: '${_shoeSizeType}: ${_shoeController.text}',
+          pantsJeansSize: _pantsJeansController.text,
+          dressSize: _dressController.text,
+          shirtSize: _shirtController.text,
+          jacketSize: _jacketController.text,
+          hatSize: _hatController.text,
+          gloveSize: _gloveController.text,
+          beltSize: _beltController.text,
+          braSize: _braController.text,
+          ringSize: _ringController.text,
+          sockSize: _sockController.text,
+          height: _heightController.text,
+          notes: _notesController.text,
+          interests: _selectedInterests,
+          dateOfBirth: _selectedDateOfBirth != null ? _selectedDateOfBirth!.toIso8601String().substring(0, 10) : null,
+        );
       // Try update, if not found, create
       try {
         await _apiService.updateProfile(profile, user.uid);
@@ -140,21 +153,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   void dispose() {
-  _tshirtController.dispose();
-  _shoeController.dispose();
-  _pantsJeansController.dispose();
-  _dressController.dispose();
-  _shirtController.dispose();
-  _jacketController.dispose();
-  _hatController.dispose();
-  _gloveController.dispose();
-  _beltController.dispose();
-  _braController.dispose();
-  _ringController.dispose();
-  _sockController.dispose();
-  _heightController.dispose();
-  _notesController.dispose();
-  super.dispose();
+    _firstnameController.dispose();
+    _lastnameController.dispose();
+    // No controller for gender
+    _tshirtController.dispose();
+    _shoeController.dispose();
+    _pantsJeansController.dispose();
+    _dressController.dispose();
+    _shirtController.dispose();
+    _jacketController.dispose();
+    _hatController.dispose();
+    _gloveController.dispose();
+    _beltController.dispose();
+    _braController.dispose();
+    _ringController.dispose();
+    _sockController.dispose();
+    _heightController.dispose();
+    _notesController.dispose();
+    super.dispose();
   }
 
   @override
@@ -164,43 +180,122 @@ class _UserProfilePageState extends State<UserProfilePage> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-    return Scaffold(
-      appBar: const WishfulAppBar(),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 32),
-            const Text(
-              'Profile',
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-              ),
-            ),
-            Align(
-              alignment: Alignment.topCenter,
-              child: Container(
-                margin: const EdgeInsets.only(top: 16),
-                width: 600,
-                padding: const EdgeInsets.all(24.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
+      return Scaffold(
+        appBar: const WishfulAppBar(),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 32),
+              const Text(
+                'Profile',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
                 ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+              ),
+              Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  margin: const EdgeInsets.only(top: 16),
+                  width: 600,
+                  padding: const EdgeInsets.all(24.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 12,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
 
-                    children: [
+                      children: [
+                        // --- Personal Information ---
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: 8.0),
+                            child: Text('Personal Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                          ),
+                        ),
+                        TextFormField(
+                          controller: _firstnameController,
+                          decoration: const InputDecoration(
+                            labelText: 'First Name',
+                            hintText: 'Enter your first name',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _lastnameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Last Name',
+                            hintText: 'Enter your last name',
+                          ),
+                        ),
+                         const SizedBox(height: 16),
+                         DropdownButtonFormField<String>(
+                           value: _selectedGender,
+                           decoration: const InputDecoration(
+                             labelText: 'Gender',
+                             border: OutlineInputBorder(),
+                           ),
+                           items: const [
+                             DropdownMenuItem(value: 'Male', child: Text('Male')),
+                             DropdownMenuItem(value: 'Female', child: Text('Female')),
+                             DropdownMenuItem(value: 'Other', child: Text('Other')),
+                             DropdownMenuItem(value: 'Prefer not to say', child: Text('Prefer not to say')),
+                           ],
+                           onChanged: (val) {
+                             setState(() {
+                               _selectedGender = val;
+                             });
+                           },
+                         ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            const Text('Date of Birth:', style: TextStyle(fontSize: 16)),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    initialDate: _selectedDateOfBirth ?? DateTime(2000, 1, 1),
+                                    firstDate: DateTime(1900),
+                                    lastDate: DateTime.now(),
+                                  );
+                                  if (picked != null) {
+                                    setState(() {
+                                      _selectedDateOfBirth = picked;
+                                    });
+                                  }
+                                },
+                                child: InputDecorator(
+                                  decoration: const InputDecoration(
+                                    labelText: 'Date of Birth',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  child: Text(
+                                    _selectedDateOfBirth != null
+                                        ? '${_selectedDateOfBirth!.year}-${_selectedDateOfBirth!.month.toString().padLeft(2, '0')}-${_selectedDateOfBirth!.day.toString().padLeft(2, '0')}'
+                                        : 'Select date',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
                       // --- Interests ---
                       const Align(
                         alignment: Alignment.centerLeft,
@@ -280,6 +375,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                   decoration: const InputDecoration(
                                     labelText: 'Pants/Jeans Size',
                                     hintText: 'e.g. 32x32, EU 40',
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                TextFormField(
+                                  controller: _heightController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Height',
+                                    hintText: 'e.g. 5\'10\", 178 cm',
                                   ),
                                 ),
                               ],
@@ -387,52 +490,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       const Align(
                         alignment: Alignment.centerLeft,
                         child: Padding(
-                          padding: EdgeInsets.only(bottom: 8.0),
+                          padding: EdgeInsets.only(bottom: 0.0),
                           child: Text('Other', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                        ),
-                      ),
-                      // Date of Birth field
-                      Row(
-                        children: [
-                          const Text('Date of Birth:', style: TextStyle(fontSize: 16)),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: InkWell(
-                              onTap: () async {
-                                final picked = await showDatePicker(
-                                  context: context,
-                                  initialDate: _selectedDateOfBirth ?? DateTime(2000, 1, 1),
-                                  firstDate: DateTime(1900),
-                                  lastDate: DateTime.now(),
-                                );
-                                if (picked != null) {
-                                  setState(() {
-                                    _selectedDateOfBirth = picked;
-                                  });
-                                }
-                              },
-                              child: InputDecorator(
-                                decoration: const InputDecoration(
-                                  labelText: 'Date of Birth',
-                                  border: OutlineInputBorder(),
-                                ),
-                                child: Text(
-                                  _selectedDateOfBirth != null
-                                      ? '${_selectedDateOfBirth!.year}-${_selectedDateOfBirth!.month.toString().padLeft(2, '0')}-${_selectedDateOfBirth!.day.toString().padLeft(2, '0')}'
-                                      : 'Select date',
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _heightController,
-                        decoration: const InputDecoration(
-                          labelText: 'Height',
-                          hintText: 'e.g. 5\'10\", 178 cm',
                         ),
                       ),
                       const SizedBox(height: 16),

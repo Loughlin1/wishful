@@ -3,6 +3,7 @@ from typing import Optional, List
 
 class UserProfileBase(BaseModel):
     tshirt_size: Optional[str] = None
+    gender: Optional[str] = None
     shoe_size: Optional[str] = None
     pants_jeans_size: Optional[str] = None
     dress_size: Optional[str] = None
@@ -27,6 +28,10 @@ class UserProfileUpdate(UserProfileBase):
 
 class UserProfileInDB(UserProfileBase):
     uid: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    gender: Optional[str] = None
 
     class Config:
         orm_mode = True

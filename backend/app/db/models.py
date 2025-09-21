@@ -41,6 +41,7 @@ class UserDB(Base):
     first_name = Column(String)
     last_name = Column(String)
     email = Column(String, unique=True, index=True)
+    gender = Column(String, nullable=True)
     wishlists = relationship('WishListDB', back_populates='owner_user')
     shared_wishlists = relationship(
         'WishListDB',

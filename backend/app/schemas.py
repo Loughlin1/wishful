@@ -24,7 +24,11 @@ class UserProfileCreate(UserProfileBase):
     uid: str
 
 class UserProfileUpdate(UserProfileBase):
-    pass
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    gender: Optional[str] = None
+    date_of_birth: Optional[str] = None
 
 class UserProfileInDB(UserProfileBase):
     uid: str
@@ -32,6 +36,7 @@ class UserProfileInDB(UserProfileBase):
     last_name: Optional[str] = None
     email: Optional[str] = None
     gender: Optional[str] = None
+    date_of_birth: Optional[str] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True

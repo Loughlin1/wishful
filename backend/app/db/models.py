@@ -33,7 +33,7 @@ class UserProfileDB(Base):
     height = Column(String, nullable=True)
     notes = Column(String, nullable=True)
     interests = Column(String, nullable=True)  # store as comma-separated string
-    date_of_birth = Column(String, nullable=True)  # ISO format string
+
 
 class UserDB(Base):
     __tablename__ = 'users'
@@ -42,6 +42,7 @@ class UserDB(Base):
     last_name = Column(String)
     email = Column(String, unique=True, index=True)
     gender = Column(String, nullable=True)
+    date_of_birth = Column(String, nullable=True) # ISO format string
     wishlists = relationship('WishListDB', back_populates='owner_user')
     shared_wishlists = relationship(
         'WishListDB',

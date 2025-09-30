@@ -36,8 +36,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
   ];
   List<String> _selectedInterests = [];
   final _formKey = GlobalKey<FormState>();
-    final _firstnameController = TextEditingController();
-    final _lastnameController = TextEditingController();
+  final _firstnameController = TextEditingController();
+  final _lastnameController = TextEditingController();
+  final _emailController = TextEditingController();
     String? _selectedGender;
   final _tshirtController = TextEditingController();
   final _shoeController = TextEditingController();
@@ -75,8 +76,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final profile = await _apiService.fetchProfile(user.uid);
     if (profile != null) {
       _profile = profile;
-    _firstnameController.text = profile.firstName ?? '';
-    _lastnameController.text = profile.lastName ?? '';
+  _firstnameController.text = profile.firstName ?? '';
+  _lastnameController.text = profile.lastName ?? '';
+  _emailController.text = profile.email ?? '';
       _selectedGender = profile.gender;
       _tshirtController.text = profile.tshirtSize ?? '';
       // Try to parse shoe size type from saved value, fallback to UK
@@ -116,7 +118,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
         final profile = UserProfile(
           firstName: _firstnameController.text,
           lastName: _lastnameController.text,
-           gender: _selectedGender,
+          email: _emailController.text,
+          gender: _selectedGender,
           tshirtSize: _tshirtController.text,
           shoeSize: '${_shoeSizeType}: ${_shoeController.text}',
           pantsJeansSize: _pantsJeansController.text,
@@ -153,8 +156,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   void dispose() {
-    _firstnameController.dispose();
-    _lastnameController.dispose();
+  _firstnameController.dispose();
+  _lastnameController.dispose();
+  _emailController.dispose();
     // No controller for gender
     _tshirtController.dispose();
     _shoeController.dispose();
@@ -238,6 +242,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           decoration: const InputDecoration(
                             labelText: 'Last Name',
                             hintText: 'Enter your last name',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _emailController,
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            hintText: 'Enter your email',
                           ),
                         ),
                          const SizedBox(height: 16),

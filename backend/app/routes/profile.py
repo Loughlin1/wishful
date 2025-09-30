@@ -48,6 +48,7 @@ def update_profile(uid: str, profile: UserProfileUpdate, db: Session = Depends(g
         first_name=getattr(user, "first_name", None) if user else None,
         last_name=getattr(user, "last_name", None) if user else None,
         email=getattr(user, "email", None) if user else None,
+        date_of_birth=getattr(user, "date_of_birth", None) if user else None,
         gender=getattr(user, "gender", None) if user else None,
     )
 
@@ -65,5 +66,6 @@ def get_profile(uid: str, db: Session = Depends(get_db)):
         first_name=getattr(user, "first_name", None) if user else None,
         last_name=getattr(user, "last_name", None) if user else None,
         email=getattr(user, "email", None) if user else None,
+        date_of_birth=getattr(user, "date_of_birth", None) if user else None,
         gender=getattr(user, "gender", None) if user else None,
     )

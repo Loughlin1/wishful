@@ -29,6 +29,7 @@ def create_user_profile(db: Session, profile: UserProfileCreate):
     db_profile = UserProfileDB(
         uid=profile.uid,
         tshirt_size=profile.tshirt_size,
+        gender=profile.gender,
         shoe_size=profile.shoe_size,
         pants_jeans_size=profile.pants_jeans_size,
         dress_size=profile.dress_size,
@@ -52,11 +53,25 @@ def create_user_profile(db: Session, profile: UserProfileCreate):
 
 def update_user_profile(db: Session, uid: str, profile: UserProfileUpdate):
     db_profile = db.query(UserProfileDB).filter(UserProfileDB.uid == uid).first()
+    user = db.query(UserDB).filter(UserDB.uid == uid).first()
     if not db_profile:
         return None
     for field, value in profile.dict(exclude_unset=True).items():
         if field == 'interests' and value is not None:
             setattr(db_profile, field, ','.join(value))
+        elif field == 'gender':
+            db_profile.gender = value
+            if user:
+                user.gender = value
+        elif field == 'email' and user:
+            user.email = value
+        elif field == 'date_of_birth':
+            if user:
+                user.date_of_birth = value
+        elif field == 'first_name' and user:
+            user.first_name = value
+        elif field == 'last_name' and user:
+            user.last_name = value
         else:
             setattr(db_profile, field, value)
     db.commit()
